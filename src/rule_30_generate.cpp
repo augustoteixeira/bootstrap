@@ -17,15 +17,20 @@ using namespace Halide;
 int main(int argc, char **argv) {
   Func hal_30("hal_30");
 
-  Var x("x");
+  Var x("x"), xi("xi");
 
-  Param<uint64_t> SIZE;
+  //Param<uint64_t> SIZE;
 
   ImageParam input(type_of<float>(), 1);
 
-  hal_30(x) = cast<float>(select((input(x) > 0) | (input(x - 1) > 0), 1, 0));
+  hal_30(x) = cast<float>(
+                          select((input(x - 1) > 0) != ((input(x) > 0) | input(x + 1) > 0), 1, 0)
+  );
 
-  hal_30.compile_to_static_library("rule_30_halide", {input, SIZE}, "hal_30");
+  // schedule
+  hal_30.vectorize(x, 8);
+
+  hal_30.compile_to_static_library("rule_30_halide", {input}, "hal_30");
 
   printf("Hal 30 compiled.\n");
 

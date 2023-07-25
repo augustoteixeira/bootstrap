@@ -10,6 +10,7 @@
 
 #include "Halide.h"
 #include <stdio.h>
+#include <time.h>
 
 using namespace Halide;
 
@@ -20,8 +21,8 @@ using namespace Halide;
 using namespace Halide::Tools;
 // using namespace Halide;
 
-const int SIZE = 40;
-const int TIME = 2;
+const int SIZE = 1000;
+const int TIME = 500;
 
 void c_30(float input[], float output[]);
 
@@ -29,10 +30,12 @@ int main(int argc, char **argv) {
   // First we'll declare some Vars to use below.
   // Now we'll express a multi-stage pipeline that blurs an image
   // first horizontally, and then vertically.
+  printf("A\n");fflush(stdout);
   {
     Var x("x"), t("t");
     float u[TIME][SIZE];
     float v[TIME][SIZE];
+    printf("B\n");
     for (int j = 0; j < TIME; j++) {
       for (int i = 0; i < SIZE; i++) {
         u[j][i] = 0.0;
@@ -42,19 +45,36 @@ int main(int argc, char **argv) {
     u[0][SIZE/2] = 1.0;
     v[0][SIZE/2] = 1.0;
 
+    clock_t tic = clock();
     for (int j = 1; j < TIME; j++) {
-      Halide::Runtime::Buffer input(v[j - 1]), output(v[j]);
-      int error = hal_30(input, SIZE, output);
+      Halide::Runtime::Buffer input(v[j - 1]);
+      Halide::Runtime::Buffer<float> output(v[j] + 1, SIZE - 2);
+      output.set_min(1);
+      int error = hal_30(input, output);
       if (error) {
         printf("Halide returned an error: %d\n", error);
       }
+    }
+    printf("Elapsed in hal_30: %f secs\n", (double)(clock() - tic)/CLOCKS_PER_SEC);
+
+    tic = clock();
+    for (int j = 1; j < TIME; j++) {
       c_30(u[j-1], u[j]);
     }
+    printf("Elapsed in c_30: %f secs\n", (double)(clock() - tic)/CLOCKS_PER_SEC);
 
-    Halide::Buffer<float> buf(u);
+    for (int j = 0; j < TIME; j++) {
+      for (int i = 0; i < SIZE; i++) {
+        if (u[j][i] != v[j][i]) {
+            printf("Error at (%d, %d), u is %f, v is %f\n", j, i, u[j][i], v[j][i]);
+          }
+      }
+    }
+
+    Halide::Buffer<float> buf(v);
     Func buf_u8("output");
     buf_u8(x, t) = cast<uint8_t>(200 * (1 - buf(x, t)));
-    Halide::Buffer<uint8_t> output = buf_u8.realize({40, 20});
+    Halide::Buffer<uint8_t> output = buf_u8.realize({SIZE, TIME});
     save_image(output, "rule_30.png");
   }
   return 0;

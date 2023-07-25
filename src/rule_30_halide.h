@@ -41,7 +41,7 @@ extern "C" {
 #endif
 
 HALIDE_FUNCTION_ATTRS
-int hal_30(struct halide_buffer_t *_p1_buffer, uint64_t _p0, struct halide_buffer_t *_hal_30_buffer);
+int hal_30(struct halide_buffer_t *_p0_buffer, struct halide_buffer_t *_hal_30_buffer);
 
 HALIDE_FUNCTION_ATTRS
 int hal_30_argv(void **args);
