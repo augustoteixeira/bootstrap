@@ -21,34 +21,39 @@ using namespace Halide;
 using namespace Halide::Tools;
 // using namespace Halide;
 
-const int SIZE = 1000;
-const int TIME = 500;
+const int SIZE = 10000;
+const int TIME = 5000;
 
 void c_30(float input[], float output[]);
 
 int main(int argc, char **argv) {
-  // First we'll declare some Vars to use below.
-  // Now we'll express a multi-stage pipeline that blurs an image
-  // first horizontally, and then vertically.
-  printf("A\n");fflush(stdout);
   {
     Var x("x"), t("t");
-    float u[TIME][SIZE];
-    float v[TIME][SIZE];
-    printf("B\n");
-    for (int j = 0; j < TIME; j++) {
-      for (int i = 0; i < SIZE; i++) {
-        u[j][i] = 0.0;
-        v[j][i] = 0.0;
+    float* u = new float[TIME * SIZE];
+    float* v = new float[TIME * SIZE];
+    float* w = new float[TIME * SIZE];
+    float* ping = new float[SIZE];
+    float* pong = new float[SIZE];
+    for (int s = 0; s < TIME; s++) {
+      for (int y = 0; y < SIZE; y++) {
+        u[s * SIZE + y] = 0.0;
+        v[s * SIZE + y] = 0.0;
+        w[s * SIZE + y] = 0.0;
       }
     }
-    u[0][SIZE/2] = 1.0;
-    v[0][SIZE/2] = 1.0;
+    for (int y = 0; y < SIZE; y++) {
+      ping[y] = 0.0;
+      pong[y] = 0.0;
+    }
+    u[SIZE/2] = 1.0;
+    v[SIZE/2] = 1.0;
+    w[SIZE/2] = 1.0;
+    ping[SIZE/2] = 1.0;
 
     clock_t tic = clock();
-    for (int j = 1; j < TIME; j++) {
-      Halide::Runtime::Buffer input(v[j - 1]);
-      Halide::Runtime::Buffer<float> output(v[j] + 1, SIZE - 2);
+    for (int s = 1; s < TIME; s++) {
+      Halide::Runtime::Buffer input(v + (s - 1) * SIZE, SIZE);
+      Halide::Runtime::Buffer<float> output(v + s * SIZE + 1, SIZE - 2);
       output.set_min(1);
       int error = hal_30(input, output);
       if (error) {
@@ -58,20 +63,59 @@ int main(int argc, char **argv) {
     printf("Elapsed in hal_30: %f secs\n", (double)(clock() - tic)/CLOCKS_PER_SEC);
 
     tic = clock();
-    for (int j = 1; j < TIME; j++) {
-      c_30(u[j-1], u[j]);
+    for (int s = 1; s < TIME; s++) {
+      float *input_ptr, *output_ptr;
+      if (s % 2 == 1) {
+        input_ptr = ping;
+        output_ptr = pong;
+      } else {
+        input_ptr = pong;
+        output_ptr = ping;
+      }
+      Halide::Runtime::Buffer input(input_ptr, SIZE);
+      Halide::Runtime::Buffer<float> output(output_ptr + 1, SIZE - 2);
+      output.set_min(1);
+      int error = hal_30(input, output);
+      output_ptr[0] = 0.0;
+      output_ptr[SIZE - 1] = 0.0;
+      //for (int y = 0; y < SIZE; y++) {
+      //  w[s * SIZE + y] = output_ptr[y];
+      //}
+      if (error) {
+        printf("Halide returned an error: %d\n", error);
+      }
+    }
+    printf("Elapsed in hal_30 2: %f secs\n", (double)(clock() - tic)/CLOCKS_PER_SEC);
+
+    tic = clock();
+    for (int s = 1; s < TIME; s++) {
+      c_30(u + (s - 1) * SIZE, u + s * SIZE);
     }
     printf("Elapsed in c_30: %f secs\n", (double)(clock() - tic)/CLOCKS_PER_SEC);
 
-    for (int j = 0; j < TIME; j++) {
-      for (int i = 0; i < SIZE; i++) {
-        if (u[j][i] != v[j][i]) {
-            printf("Error at (%d, %d), u is %f, v is %f\n", j, i, u[j][i], v[j][i]);
-          }
+    for (int s = 0; s < TIME; s++) {
+      for (int y = 0; y < SIZE; y++) {
+        if (u[s * SIZE + y] != v[s * SIZE + y]) {
+          printf("Error at (%d, %d), u is %f, v is %f\n",
+                 s, y, u[s * SIZE + y], v[s * SIZE + y]);
+        }
+      }
+    }
+    int final_time = TIME - 1;
+    float *final_ptr;
+    if (final_time % 2 == 0) {
+      final_ptr = ping;
+    } else {
+      final_ptr = pong;
+    }
+    for (int y = 0; y < SIZE; y++) {
+      if (v[final_time * SIZE + y] != final_ptr[y]) {
+        printf("Error at (%d, %d), u is %f, ping-pong is %f\n",
+               final_time, y, v[final_time * SIZE + y], final_ptr[y]);
       }
     }
 
-    Halide::Buffer<float> buf(v);
+    Halide::Buffer<float> buf(w, SIZE, TIME);
     Func buf_u8("output");
     buf_u8(x, t) = cast<uint8_t>(200 * (1 - buf(x, t)));
     Halide::Buffer<uint8_t> output = buf_u8.realize({SIZE, TIME});
@@ -86,45 +130,3 @@ void c_30(float input[], float output[]) {
       != ((input[i] > 0 ? true : false) | (input[i + 1] > 0 ? true : false));
   }
 }
-
-// void hal_30(float input[], float output[]) {
-//   Var x("x");
-//   // Func u("u"), v("v");
-//   Func v("u");
-//   // u(x) = 0;
-//   // u(x) = 0;
-//   // u(21) = 1;
-//   // //v(x, 0) = u(x, 0);
-//   // //v.trace_stores();
-//   // //for (int i = 1; i < 20; i++) {
-//   Halide::Buffer<float> input_buf(input);
-
-//   v(x) = select((input_buf(x) > 0) | (input_buf(x) > 0), 1, 0);
-
-//   Halide::Buffer<float> output_buf = v.realize({SIZE, TIME});
-
-//   output = *output_buf;
-//   //Halide::Buffer<float> output_buf(input);
-//   // u(x) = v(x, i);
-//   // // }
-//   // Func fa[20];
-//   // fa[0](x) = u(x);
-//   // for (int i = 1; i < 20; i++) {
-//   //   fa[i](x) = select((fa[i - 1](x + 1)) != (fa[i - 1](x) > 0) | (fa[i - 1](x - 1) > 0), 1, 0);
-//   //   //h(x, r) = Tuple(u(x, r - 1), u(x, r - 1));
-//   //   //v(x, i) = select((v(x, i - 1) > 0) | (v(x, i - 1) > 0), 1, 0);
-//   //   //u(x, r) = h(x, r)[0] + h(x, r)[1]; //select((u(x, i - 1) > 0) | (u(x - 1, i - 1) > 0), 1, 0);
-//   // }
-
-
-
-//   // Func config("config");
-//   // config(x, t) = select(fa[19](x) == 0, 255, 0);
-//   // Func config_u8("config_u8");
-//   // config_u8(x, t) = cast<uint8_t>(config(x, t));
-
-//   // //Buffer<uint8_t> rect(40, 20);
-//   // //rect.set_min(-20, 0);
-
-//   // Halide::Buffer<uint8_t> output = config_u8.realize({40, 20});
-// }
