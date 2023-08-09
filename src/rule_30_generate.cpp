@@ -28,11 +28,12 @@ int main(int argc, char **argv) {
   );
 
   // schedule
-  hal_30.vectorize(x, 8);
-  // Var x_in, x_out;
-  // hal_30.split(x, x, x_in, 8)
-  //   .vectorize(x_in)
-  //   .parallel(x_out);
+  //hal_30.vectorize(x, 8);
+  Var x_micro, x_index, x_mezo, x_vec;
+  hal_30.split(x, x_vec, x_micro, 8)
+    .vectorize(x_micro);
+  //  .split(x_vec, x_index, x_mezo, 1000)
+  //  .parallel(x_index);
 
   hal_30.compile_to_static_library("rule_30_halide", {input}, "hal_30");
 

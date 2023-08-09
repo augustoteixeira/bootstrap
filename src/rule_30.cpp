@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
       }
     }
 
-    Halide::Buffer<float> buf(w, SIZE, TIME);
+    Halide::Buffer<float> buf(v, SIZE, TIME);
     Func buf_u8("output");
     buf_u8(x, t) = cast<uint8_t>(200 * (1 - buf(x, t)));
     Halide::Buffer<uint8_t> output = buf_u8.realize({SIZE, TIME});

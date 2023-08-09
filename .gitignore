@@ -32,3 +32,6 @@
 *.app
 src/rule_30
 src/rule_30_generate
+
+# Images
+*.png
