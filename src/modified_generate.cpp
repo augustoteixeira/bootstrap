@@ -13,17 +13,15 @@
 
 using namespace Halide;
 
-
 int main(int argc, char **argv) {
-  Func hal_30("hal_30");
+  Func modified("modified");
 
-  Var x("x");
+  Var m("m");
 
-  //Param<uint64_t> SIZE;
+  ImageParam minus1(type_of<float>(), 1);
+  ImageParam minus2(type_of<float>(), 1);
 
-  ImageParam input(type_of<float>(), 1);
-
-  hal_30(x) = cast<float>(
+  modified(m) = cast<float>(
     select((input(x - 1) > 0) != ((input(x) > 0) | input(x + 1) > 0), 1, 0)
   );
 
