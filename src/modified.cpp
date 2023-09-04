@@ -41,7 +41,7 @@ double n(double p, int k) {
 int main(int argc, char **argv) {
   {
     clock_t tic = clock();
-    for (int m = 1; m < 8; m ++) {
+    for (int m = 1; m < 9; m ++) {
       double p = pow(2, -m);
       int a_max = 4*log(1/p)/p;
       double* N0 = new double[7 * a_max];
@@ -80,8 +80,9 @@ int main(int argc, char **argv) {
           for (int l = 0; l < a_max; l++) {
             sum += current[l];
           }
-          printf("m = %d, p = %f, N = %d, log(sum{M(x, N-x)}) = %f, -p*lm = %f, -log(middle) = %f\n",
-                 m, p, a_max, log(sum), -p * log(sum), -log(current[s/2]));
+          printf("%f, %f # <- p and -p log(sum);  m = %d, N = %d, log(sum{M(x, N-x)}) = %f, -log(middle) = %f\n",
+                 p, -p * log(sum), m, a_max, log(sum), -log(current[s/2]));
+          fflush(stdout);
         }
       }
       delete N0;
