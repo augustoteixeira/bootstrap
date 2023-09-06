@@ -143,100 +143,80 @@ int main(int argc, char **argv) {
           fflush(stdout);
         }
       }
-
-      if (m == m_for_image) {
-        // print table
-        printf("table size = %d\n", tab_h * tab_w * 7);
-        for (int k = 0; k < 7; k++) {
-          printf("table %d:\n", k);
-          for (int i = tab_w - 1; i > 0; i--) {
-            for (int j = 1; j < tab_h; j++) {
-              printf("M[%d, %d] = ", j, i);
-              long double value =
-                normalize(table[k * tab_w * tab_h + j * tab_h + i]);
-              if (value == -200) {
-                printf("         ");
-              } else {
-                printf("%7.2Lf, ", value);
-              }
-            }
-            printf("\n");
-          }
-        }
-        printf("\n");
-        // write image
-        printf("p_for_image = %Lf\n", p_for_image);
-        printf("a_max_for_image = %d\n", a_max_for_image);
-        printf("image size = %d\n", a_max_for_image * a_max_for_image);
-        for (int j = 0; j < a_max_for_image * a_max_for_image; j++) {
-          image[j] = normalize(image[j]);
-        }
-        // for (int j = 5; j > 0; j--) {
-        //   for (int i = 1; i < 6; i++) {
-        //     printf("i[%d, %d] = ", i, j);
-        //     long double value = image[j * a_max + i];
-        //     if (value == -200) {
-        //       printf("         ");
-        //     } else {
-        //       printf("%7.2Lf, ", value);
-        //     }
-        //   }
-        //   printf("\n");
-        // }
-        printf("p = %Lf\n", p);
-        printf("log p = %Lf\n", logl(p));
-        printf("N(1) = %Lf\n", n(p, 1));
-
-        long double max_image = -10000000000;
-        long double min_image = 1000000000;
-        for (int i = 0; i < a_max_for_image/2; i++) {
-          for (int j = 0; j < a_max_for_image/2; j++) {
-            if (image[i * a_max_for_image + j] > max_image) {
-              max_image = image[i * a_max_for_image + j];
-            }
-            if (image[i * a_max_for_image + j] < min_image) {
-              min_image = image[i * a_max_for_image + j];
-            }
-          }
-        }
-        printf("max_image = %Lf\n", max_image);
-        printf("min_image = %Lf\n", min_image);
-        for (int i = 0; i < a_max_for_image/2; i++) {
-          for (int j = 0; j < a_max_for_image/2; j++) {
-            image[i * a_max_for_image + j] =
-              255 * ((image[i * a_max_for_image + j] - min_image) / (max_image - min_image));
-          }
-        }
-
-        FILE *imageFile;
-        int x,y,pixel,height=a_max/2,width=a_max/2;
-
-        imageFile=fopen("image.pgm","wb");
-        if(imageFile==NULL){
-          perror("ERROR: Cannot open output file");
-          exit(EXIT_FAILURE);
-        }
-
-        fprintf(imageFile,"P5\n");           // P5 filetype
-        fprintf(imageFile,"%d %d\n",width,height);   // dimensions
-        fprintf(imageFile,"255\n");          // Max pixel
-
-        /* Now write a greyscale ramp */
-        for(x=0;x<height;x++){
-          for(y=0;y<width;y++){
-            pixel = (int) image[(height - x - 1) * a_max + y];
-            fputc(pixel,imageFile);
-          }
-        }
-
-        fclose(imageFile);
-      }
       delete N0;
       delete N1;
       delete N2;
       delete N3;
     }
-    fprintf(stderr, "Elapsed in c_30: %Lf secs\n", (long double)(clock() - tic)/CLOCKS_PER_SEC);
+    fprintf(stderr, "Elapsed in c_30: %Lf secs\n\n", (long double)(clock() - tic)/CLOCKS_PER_SEC);
+
+    // print tables
+    printf("table dimensions = %d by %d\n", tab_h, tab_w);
+    for (int k = 0; k < 7; k++) {
+      printf("table %d:\n", k);
+      for (int i = tab_w - 1; i > 0; i--) {
+        for (int j = 1; j < tab_h; j++) {
+          printf("M[%d, %d] = ", j, i);
+          long double value =
+            normalize(table[k * tab_w * tab_h + j * tab_h + i]);
+          if (value == -200) {
+            printf("         ");
+          } else {
+            printf("%7.2Lf, ", value);
+          }
+        }
+        printf("\n");
+      }
+    }
+    printf("\n");
+
+    // write image
+    printf("p_for_image = %Lf\n", p_for_image);
+    printf("log(p) = %Lf\n", logl(p_for_image));
+    printf("a_max_for_image = %d\n", a_max_for_image);
+    printf("image size = %d\n", a_max_for_image * a_max_for_image);
+    // normalize image
+    for (int j = 0; j < a_max_for_image * a_max_for_image; j++) {
+      image[j] = normalize(image[j]);
+    }
+    // scale it to stay between zero and 255
+    long double max_image = -10000000000;
+    long double min_image = 1000000000;
+    for (int i = 0; i < a_max_for_image/2; i++) {
+      for (int j = 0; j < a_max_for_image/2; j++) {
+        if (image[i * a_max_for_image + j] > max_image) {
+          max_image = image[i * a_max_for_image + j];
+        }
+        if (image[i * a_max_for_image + j] < min_image) {
+          min_image = image[i * a_max_for_image + j];
+        }
+      }
+    }
+    for (int i = 0; i < a_max_for_image/2; i++) {
+      for (int j = 0; j < a_max_for_image/2; j++) {
+        image[i * a_max_for_image + j] =
+          255 * ((image[i * a_max_for_image + j] - min_image) / (max_image - min_image));
+      }
+    }
+    // write to file
+    FILE *imageFile;
+    int x,y,pixel,height=a_max_for_image/2,width=a_max_for_image/2;
+    imageFile=fopen("image.pgm","wb");
+    if(imageFile==NULL){
+      perror("ERROR: Cannot open output file");
+      exit(EXIT_FAILURE);
+    }
+    fprintf(imageFile,"P5\n");           // P5 filetype
+    fprintf(imageFile,"%d %d\n",width,height);   // dimensions
+    fprintf(imageFile,"255\n");          // Max pixel
+    /* Now write a greyscale ramp */
+    for(x=0;x<height;x++){
+      for(y=0;y<width;y++){
+        pixel = (int) image[(height - x - 1) * a_max_for_image + y];
+        fputc(pixel,imageFile);
+      }
+    }
+    fclose(imageFile);
     delete image;
   }
   return 0;
