@@ -1,9 +1,0 @@
-0.500000, 1.039721 # <- p and -p log(sum);  m = 1, N = 5, log(sum{M(x, N-x)}) = -2.079442, -log(middle) = inf
-0.250000, 0.933275 # <- p and -p log(sum);  m = 2, N = 22, log(sum{M(x, N-x)}) = -3.733101, -log(middle) = 6.197365
-0.125000, 0.939758 # <- p and -p log(sum);  m = 3, N = 66, log(sum{M(x, N-x)}) = -7.518065, -log(middle) = 10.949778
-0.062500, 0.981830 # <- p and -p log(sum);  m = 4, N = 177, log(sum{M(x, N-x)}) = -15.709275, -log(middle) = 20.267015
-0.031250, 0.679147 # <- p and -p log(sum);  m = 5, N = 443, log(sum{M(x, N-x)}) = -21.732690, -log(middle) = 27.503352
-0.015625, 0.421573 # <- p and -p log(sum);  m = 6, N = 1064, log(sum{M(x, N-x)}) = -26.980668, -log(middle) = 33.970738
-0.007812, 0.249400 # <- p and -p log(sum);  m = 7, N = 2484, log(sum{M(x, N-x)}) = -31.923250, -log(middle) = 40.136956
-0.003906, 0.143334 # <- p and -p log(sum);  m = 8, N = 5678, log(sum{M(x, N-x)}) = -36.693437, -log(middle) = 46.152164
-Elapsed in c_30: 4.661225 secs
