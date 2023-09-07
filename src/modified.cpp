@@ -2,9 +2,11 @@
 #include <time.h>
 #include <math.h>
 
+//#include "omp.h"
+
 const long double LOG_MULTIPLE = 2.0;
 // defined below
-void c_modified(long double p, int s, long double output[], long double past1[], long double past2[], long double past3[], int a_max);
+void c_modified(long double p, int s, void *, void *, void *, void *, int);
 bool IsPowerOfTwo(ulong x) { return (x != 0) && ((x & (x - 1)) == 0); }
 // there exists an infection among k fixed points
 long double f(long double p, int k) { return 1 - powl(1 - p, k); }
@@ -16,7 +18,7 @@ long double normalize(long double v) { return fmaxl(logl(v), -200); }
 int main(int argc, char **argv) {
   {
     clock_t tic = clock(); // for timing purposes
-    int m_max = 4; // we let p run from 2^{-1}, 2^{-2}, ..., 2^{-m_max}.
+    int m_max = 6; // we let p run from 2^{-1}, 2^{-2}, ..., 2^{-m_max}.
     int m_for_image = 4; // this exponent will be used to build the table and the png image
     if (m_max < m_for_image) { return 1; };
 
@@ -36,7 +38,8 @@ int main(int argc, char **argv) {
     // table dimensions
     int tab_h = 5;
     int tab_w = 6;
-    long double* table = new long double[tab_h * tab_w * 7];
+    long double (*table)[tab_h][tab_w] = (long double (*)[tab_h][tab_w])
+      malloc(sizeof(long double[7][tab_h][tab_w]));
 
     // loop through several values of p
     for (int m = 1; m <= m_max; m++) {
@@ -47,25 +50,27 @@ int main(int argc, char **argv) {
       // one will be the current one, being updated and the others will be the
       // three past layers.
       // Note that we use 7 * a_max, one for each of the 7 states
-      long double* N0 = new long double[7 * a_max];
-      long double* N1 = new long double[7 * a_max];
-      long double* N2 = new long double[7 * a_max];
-      long double* N3 = new long double[7 * a_max];
+      long double (*N0)[a_max] = (long double (*)[a_max]) malloc(sizeof(long double[7][a_max]));
+      long double (*N1)[a_max] = (long double (*)[a_max]) malloc(sizeof(long double[7][a_max]));
+      long double (*N2)[a_max] = (long double (*)[a_max]) malloc(sizeof(long double[7][a_max]));
+      long double (*N3)[a_max] = (long double (*)[a_max]) malloc(sizeof(long double[7][a_max]));
       // these pointers will be set accordingly. To fill M(i,j), we use N(i+j mod 4)
-      long double* current;
-      long double* past1;
-      long double* past2;
-      long double* past3;
+      long double (*current)[a_max];
+      long double (*past1)[a_max];
+      long double (*past2)[a_max];
+      long double (*past3)[a_max];
       // initialize everything with zeros first
-      for (int j = 0; j < 7 * a_max; j++) {
-        N0[j] = 0; N1[j] = 0; N2[j] = 0; N3[j] = 0;
+      for (int k = 0; k < 7 ; k++) {
+        for (int s = 0; s < a_max; s++) {
+          N0[k][s] = 0; N1[k][s] = 0; N2[k][s] = 0; N3[k][s] = 0;
+        }
       }
       // update the value of the 1 x 1 boxes for the states that are reachable:
       // note that we use N2 to hold the value of the M(1,1), because 1 + 1 mod 4 = 2.
-      N2[0*a_max+1] = table[0*tab_h*tab_w + tab_h + 1] = p * n(p, 0);
-      N2[1*a_max+1] = table[1*tab_h*tab_w + tab_h + 1] = p * n(p, 1);
-      N2[2*a_max+1] = table[2*tab_h*tab_w + tab_h + 1] = p * n(p, 3);
-      N2[3*a_max+1] = table[3*tab_h*tab_w + tab_h + 1] = p * n(p, 5);
+      N2[0][1] = table[0][1][1] = p * n(p, 0);
+      N2[1][1] = table[1][1][1] = p * n(p, 1);
+      N2[2][1] = table[2][1][1] = p * n(p, 3);
+      N2[3][1] = table[3][1][1] = p * n(p, 5);
       image[1][1] = p;
 
       tic = clock();
@@ -95,13 +100,13 @@ int main(int argc, char **argv) {
           for (int k = 0; k < 7; k++) {
             for (int i = 0; i < tab_w; i++) {
               if (s - i <= tab_h) {
-                table[k * tab_w * tab_h + i * tab_h + (s - i)] = current[k * a_max + i];
+                table[k][i][s - i] = current[k][i];
               }
             }
           }
           // fill image
           for (int j = 1; j < s; j++) {
-            image[s-j][j] = current[j];
+            image[s-j][j] = current[0][j];
           }
         }
         // if we are at the last diagonal, calculate max and sum and print
@@ -109,19 +114,24 @@ int main(int argc, char **argv) {
           long double sum = 0;
           long double max = 0;
           for (int l = 0; l < a_max; l++) {
-            if (max < current[l]) { max = current[l]; }
-            sum += current[l];
+            if (max < current[0][l]) { max = current[0][l]; }
+            sum += current[0][l];
           }
-          printf("%Lf, %Lf\n", -logl(p), -p * logl(sum));
+          printf("%Lf, %Lf\n", -logl(p), -p * logl(max));
           //printf("m = %d, N = %d, logl(sum{M(x, N-x)}) = %Lf, -logl(middle) = %Lf\n",
           //       m, a_max, logl(sum), -logl(current[s/2]));
           fflush(stdout);
         }
       }
-      delete N0;
-      delete N1;
-      delete N2;
-      delete N3;
+      printf("A");          fflush(stdout);
+      free(N0);
+      printf("B");          fflush(stdout);
+      free(N1);
+      printf("C");          fflush(stdout);
+      free(N2);
+      printf("D");          fflush(stdout);
+      free(N3);
+      printf("E");          fflush(stdout);
     }
     fprintf(stderr, "Elapsed in c_30: %Lf secs\n\n", (long double)(clock() - tic)/CLOCKS_PER_SEC);
 
@@ -133,7 +143,7 @@ int main(int argc, char **argv) {
         for (int j = 1; j < tab_h; j++) {
           printf("M[%d, %d] = ", j, i);
           long double value =
-            normalize(table[k * tab_w * tab_h + j * tab_h + i]);
+            normalize(table[k][j][i]);
           if (value == -200) {
             printf("         ");
           } else {
@@ -193,7 +203,6 @@ int main(int argc, char **argv) {
       }
     }
     fclose(imageFile);
-    free(image);
   }
   return 0;
 }
@@ -201,34 +210,33 @@ int main(int argc, char **argv) {
 void c_modified(
   long double p,
   int s,
-  long double output[],
-  long double past1[],
-  long double past2[],
-  long double past3[],
+  void * o,
+  void * p1,
+  void * p2,
+  void * p3,
   int a_max)
 {
+  long double (*output)[a_max] = static_cast<long double (*)[a_max]>(o);
+  long double (*past1)[a_max] = static_cast<long double (*)[a_max]>(p1);
+  long double (*past2)[a_max] = static_cast<long double (*)[a_max]>(p2);
+  long double (*past3)[a_max] = static_cast<long double (*)[a_max]>(p2);
+  // pragma omp parallel for
   for (int a = 1; a < s; a++) {
     int b = s - a;
-    output[0 * a_max + a] =
-      p * (past2[1 * a_max + a - 1] + past2[5 * a_max + a - 1] + past2[6 * a_max + a - 1])
-      + f(p, b) * past1[0 * a_max + a - 1];
-    output[1 * a_max + a] = (1 - p) * f(p, a) * past1[1 * a_max + a]
-      + n(p, b) * output[0 * a_max + a] + p * past2[2 * a_max + a - 1];
-    output[5 * a_max + a] = (1 - p) * f(p, a) * past1[5 * a_max + a]
-      + p * past2[4 * a_max + a - 1];
+    output[0][a] = p * (past2[1][a - 1] + past2[5][a - 1] + past2[6][a - 1])
+      + f(p, b) * past1[0][a - 1];
+    output[1][a] = (1 - p) * f(p, a) * past1[1][a]
+      + n(p, b) * output[0][a] + p * past2[2][a - 1];
+    output[5][a] = (1 - p) * f(p, a) * past1[5][a] + p * past2[4][a - 1];
     // be careful!!! Here we are overflowing on purpose for a - 2,
     // but this seems fine for testing
-    output[6 * a_max + a] = (1 - p) * n(p, b) * past1[6 * a_max + a - 1]
-      + p * p * past3[3 * a_max + a - 2];
-    output[2 * a_max + a] = (1 - p) * f(p, b) * past1[2 * a_max + a - 1]
-      + p * (1 - p) * past2[3 * a_max + a - 1]
-      + (1 - p) * n(p, a) * output[1 * a_max + a]
-      + (1 - p) * n(p, b) * output[6 * a_max + a];
-    output[4 * a_max + a] = (1 - p) * f(p, b) * past1[4 * a_max + a - 1]
-      + p * (1 - p) * past2[3 * a_max + a - 1]
-      + (1 - p) * n(p, a) * output[5 * a_max + a];
-    output[3 * a_max + a] = (1 - p) * (1 - p) * f(p, a) * past1[3 * a_max + a]
-      + (1 - p) * n(p, b) * output[2 * a_max + a]
-      + (1 - p) * n(p, b) * output[4 * a_max + a];
+    output[6][a] = (1 - p) * n(p, b) * past1[6][a - 1] + p * p * past3[3][a - 2];
+    output[2][a] = (1 - p) * f(p, b) * past1[2][a - 1]
+      + p * (1 - p) * past2[3][a - 1]
+      + (1 - p) * n(p, a) * output[1][a] + (1 - p) * n(p, b) * output[6][a];
+    output[4][a] = (1 - p) * f(p, b) * past1[4][a - 1]
+      + p * (1 - p) * past2[3][a - 1] + (1 - p) * n(p, a) * output[5][a];
+    output[3][a] = (1 - p) * (1 - p) * f(p, a) * past1[3][a]
+      + (1 - p) * n(p, b) * output[2][a] + (1 - p) * n(p, b) * output[4][a];
   }
 }
