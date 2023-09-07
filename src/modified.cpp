@@ -1,54 +1,23 @@
-// Halide rule 30
-
-// On linux, you can compile and run it like so:
-// g++ lesson_07*.cpp -g -std=c++17 -I <path/to/Halide.h> -I <path/to/tools/halide_image_io.h> -L <path/to/libHalide.so> -lHalide `libpng-config --cflags --ldflags` -ljpeg -lpthread -ldl -o lesson_07
-// LD_LIBRARY_PATH=<path/to/libHalide.so> ./lesson_07
-
-// On os x:
-// g++ lesson_07*.cpp -g -std=c++17 -I <path/to/Halide.h> -I <path/to/tools/halide_image_io.h> -L <path/to/libHalide.so> -lHalide `libpng-config --cflags --ldflags` -ljpeg -o lesson_07
-// DYLD_LIBRARY_PATH=<path/to/libHalide.dylib> ./lesson_07
-
-//#include "Halide.h"
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
 
-// using namespace Halide;
-
-// Support code for loading pngs.
-//#include "halide_image_io.h"
-//#include "rule_30_halide.h"
-
-//using namespace Halide::Tools;
-// using namespace Halide;
-
 const long double LOG_MULTIPLE = 2.0;
-
-
+// defined below
 void c_modified(long double p, int s, long double output[], long double past1[], long double past2[], long double past3[], int a_max);
-
-bool IsPowerOfTwo(ulong x)
-{
-  return (x != 0) && ((x & (x - 1)) == 0);
-}
-
-long double f(long double p, int k) {
-  return 1 - powl(1 - p, k);
-}
-
-long double n(long double p, int k) {
-  return powl(1 - p, k);
-}
-
-long double normalize(long double v) {
-  return fmaxl(logl(v), -200);
-}
+bool IsPowerOfTwo(ulong x) { return (x != 0) && ((x & (x - 1)) == 0); }
+// there exists an infection among k fixed points
+long double f(long double p, int k) { return 1 - powl(1 - p, k); }
+// there is no infection in these k points
+long double n(long double p, int k) { return powl(1 - p, k); }
+// normalizing function for image generation
+long double normalize(long double v) { return fmaxl(logl(v), -200); }
 
 int main(int argc, char **argv) {
   {
-    clock_t tic = clock();
-    int m_max = 4;
-    int m_for_image = 4; // this will be used to build the table and the png image
+    clock_t tic = clock(); // for timing purposes
+    int m_max = 4; // we let p run from 2^{-1}, 2^{-2}, ..., 2^{-m_max}.
+    int m_for_image = 4; // this exponent will be used to build the table and the png image
     if (m_max < m_for_image) { return 1; };
 
     // on my machine, long doubles are 16 bytes long, which is twice as much as double
@@ -56,8 +25,13 @@ int main(int argc, char **argv) {
     // image inicialization
     long double p_for_image = powl(2.0, -m_for_image);
     int a_max_for_image = (int) LOG_MULTIPLE * logl(1 / p_for_image) / p_for_image;
-    long double* image = new long double[a_max_for_image * a_max_for_image];
-    for (int j = 0; j < a_max_for_image * a_max_for_image; j++) { image[j] = 0; }
+    long double (*image)[a_max_for_image] = (long double (*)[a_max_for_image])
+      malloc(sizeof(long double[a_max_for_image][a_max_for_image]));
+    for (int i = 0; i < a_max_for_image; i++) {
+      for (int j = 0; j < a_max_for_image; j++) {
+        image[i][j] = 0;
+      }
+    }
 
     // table dimensions
     int tab_h = 5;
@@ -87,11 +61,12 @@ int main(int argc, char **argv) {
         N0[j] = 0; N1[j] = 0; N2[j] = 0; N3[j] = 0;
       }
       // update the value of the 1 x 1 boxes for the states that are reachable:
-      N2[0*a_max+1] = image[1*a_max_for_image + 1] = table[0*tab_h*tab_w + tab_h + 1] = p * n(p, 0);
-      N2[1*a_max+1] = image[2*a_max_for_image + 1] = table[1*tab_h*tab_w + tab_h + 1] = p * n(p, 1);
-      N2[2*a_max+1] = image[3*a_max_for_image + 1] = table[2*tab_h*tab_w + tab_h + 1] = p * n(p, 3);
-      N2[3*a_max+1] = image[4*a_max_for_image + 1] = table[3*tab_h*tab_w + tab_h + 1] = p * n(p, 5);
       // note that we use N2 to hold the value of the M(1,1), because 1 + 1 mod 4 = 2.
+      N2[0*a_max+1] = table[0*tab_h*tab_w + tab_h + 1] = p * n(p, 0);
+      N2[1*a_max+1] = table[1*tab_h*tab_w + tab_h + 1] = p * n(p, 1);
+      N2[2*a_max+1] = table[2*tab_h*tab_w + tab_h + 1] = p * n(p, 3);
+      N2[3*a_max+1] = table[3*tab_h*tab_w + tab_h + 1] = p * n(p, 5);
+      image[1][1] = p;
 
       tic = clock();
       // we now loop over the diagonals i + j = s. As we already filled M(1, 1), we start with 3.
@@ -126,7 +101,7 @@ int main(int argc, char **argv) {
           }
           // fill image
           for (int j = 1; j < s; j++) {
-            image[(s-j) * a_max + j] = current[j];
+            image[s-j][j] = current[j];
           }
         }
         // if we are at the last diagonal, calculate max and sum and print
@@ -176,26 +151,27 @@ int main(int argc, char **argv) {
     printf("a_max_for_image = %d\n", a_max_for_image);
     printf("image size = %d\n", a_max_for_image * a_max_for_image);
     // normalize image
-    for (int j = 0; j < a_max_for_image * a_max_for_image; j++) {
-      image[j] = normalize(image[j]);
+    for (int i = 0; i < a_max_for_image; i++) {
+      for (int j = 0; j < a_max_for_image; j++) {
+        image[i][j] = normalize(image[i][j]);
+      }
     }
     // scale it to stay between zero and 255
     long double max_image = -10000000000;
     long double min_image = 1000000000;
     for (int i = 0; i < a_max_for_image/2; i++) {
       for (int j = 0; j < a_max_for_image/2; j++) {
-        if (image[i * a_max_for_image + j] > max_image) {
-          max_image = image[i * a_max_for_image + j];
+        if (image[i][j] > max_image) {
+          max_image = image[i][j];
         }
-        if (image[i * a_max_for_image + j] < min_image) {
-          min_image = image[i * a_max_for_image + j];
+        if (image[i][j] < min_image) {
+          min_image = image[i][j];
         }
       }
     }
     for (int i = 0; i < a_max_for_image/2; i++) {
       for (int j = 0; j < a_max_for_image/2; j++) {
-        image[i * a_max_for_image + j] =
-          255 * ((image[i * a_max_for_image + j] - min_image) / (max_image - min_image));
+        image[i][j] = 255 * ((image[i][j] - min_image) / (max_image - min_image));
       }
     }
     // write to file
@@ -212,12 +188,12 @@ int main(int argc, char **argv) {
     /* Now write a greyscale ramp */
     for(x=0;x<height;x++){
       for(y=0;y<width;y++){
-        pixel = (int) image[(height - x - 1) * a_max_for_image + y];
+        pixel = (int) image[height - x - 1][y];
         fputc(pixel,imageFile);
       }
     }
     fclose(imageFile);
-    delete image;
+    free(image);
   }
   return 0;
 }
