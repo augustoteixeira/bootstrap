@@ -123,7 +123,9 @@ int main(int argc, char **argv) {
             if (max < current[0][l]) { max = current[0][l]; }
             sum += current[0][l];
           }
-          printf("%Lf, %Lf # m = %d\n", -logl(p), -p * logl(sum), m);
+          //printf("%Lf, %Lf # m = %d, p = %7.6Lf\n", -logl(p), -p * logl(sum), m, p);
+          printf("p = %7.6Lf, size = %7d, -p * log(diagonal sum) = %7.6Lf, m = %2d\n",
+                 p, a_max,-p * logl(sum), m);
           //printf("m = %d, N = %d, logl(sum{M(x, N-x)}) = %Lf, -logl(middle) = %Lf\n",
           //       m, a_max, logl(sum), -logl(current[s/2]));
           fflush(stdout);
