@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
         // if we are at the last diagonal, calculate max and sum and print
         if (s == a_max - 1) {
           //printf("%Lf, %Lf # m = %d, p = %7.6Lf\n", -logl(p), -p * logl(sum), m, p);
-          printf("%7.6Lf, ", p);
+          printf("%7.6Lf, ", -logl(p));
           mpfr_t temp2;
           mpfr_init(temp2);
           mpfr_log(temp2, j, MPFR_RNDD);
