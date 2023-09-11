@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
   {
     clock_t tic = clock(); // for timing purposes
     int m_min = 4; // we let p run from 2^{-m_min}, 2^{-2}, ..., 2^{-m_max} (inclusive).
-    int m_max = 18;
+    int m_max = 12;
     int m_for_image = 4; // this exponent will be used to build the table and the png image
     if (m_max < m_min) { return 1; };
     //if (m_for_image < m_min) { return 1; };
@@ -227,10 +227,10 @@ void c_modified(
     output[1][a] = (1 - p) * f(p, a) * past1[1][a]
       + n(p, b) * output[0][a] + p * past2[2][a - 1];
     output[5][a] = (1 - p) * f(p, a) * past1[5][a] + p * past2[4][a - 1];
-    if (a == 1) {
-        output[6][a] = (1 - p) * n(p, b) * past1[6][a - 1];
+    if (a < 3) {
+      output[6][a] = 0;
     } else {
-      output[6][a] = (1 - p) * n(p, b) * past1[6][a - 1] + p * p * past3[3][a - 2];
+      output[6][a] = (1 - p) * f(p, b) * past1[6][a - 1] + p * p * past3[3][a - 2];
     }
     output[2][a] = (1 - p) * f(p, b) * past1[2][a - 1]
       + p * (1 - p) * past2[3][a - 1]
