@@ -1,3 +1,8 @@
+# installation
+
+    sudo apt install libgmp-dev
+    sudo apt install libmpfr-dev
+
 # bootstrap
 
 

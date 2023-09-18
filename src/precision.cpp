@@ -27,48 +27,45 @@ void fm(mpfr_t p, int k) {
 real normalize(real v) { return fmaxl(logl(v), -200); }
 
 int main(int argc, char **argv) {
-  {
-    clock_t tic = clock(); // for timing purposes
-    int m_min = 4; // we let p run from 2^{-m_min}, 2^{-2}, ..., 2^{-m_max} (inclusive).
-    int m_max = 17;
+  clock_t tic = clock(); // for timing purposes
+  int m_min = 4; // we let p run from 2^{-m_min}, 2^{-2}, ..., 2^{-m_max} (inclusive).
+  int m_max = 17;
 
-    // loop through several values of p
-    for (int m = m_min; m <= m_max; m++) {
-      // mpf_t p;
-      // mpf_init(p);
-      // mpf_set_d(p, powl(2, -m));
-      real p;
-      p = powl(2, -m);
-      int a_max = (int) LOG_MULTIPLE * logl(1 / p) / p;
+  // loop through several values of p
+  for (int m = m_min; m <= m_max; m++) {
+    // mpf_t p;
+    // mpf_init(p);
+    // mpf_set_d(p, powl(2, -m));
+    real p;
+    p = powl(2, -m);
+    int a_max = (int) LOG_MULTIPLE * logl(1 / p) / p;
 
-      mpfr_t long_p;
-      mpfr_init(long_p);
+    mpfr_t long_p;
+    mpfr_init(long_p);
 
-      tic = clock();
-      // we now loop over the diagonals i + j = s. As we already filled M(1, 1), we start with 3.
-      //for (int s = 3; s < a_max; s++) {
-      //  if (s == a_max - 1) {
-          //printf("%Lf, %Lf # m = %d, p = %7.6Lf\n", -logl(p), -p * logl(sum), m, p);
-          printf("m = %d, a_max = %d", m, a_max);
-          printf("p = %7.6Lf, \n", p);
-          printf("f (p, a_max) = %23.16Lf,\n", f(p, a_max));
-          mpfr_set_d(long_p, p, MPFR_RNDD);
-          fm(long_p, a_max);
-          printf("fm(p, a_max) =  ");
-          mpfr_out_str(stdout, 10, 40, long_p, MPFR_RNDD);
-          printf("\nn (p, a_max) = %23.16Lf,", n(p, a_max));
-          mpfr_set_d(long_p, p, MPFR_RNDD);
-          nm(long_p, a_max);
-          printf("\nnm(p, a_max) = , ");
-          mpfr_out_str(stdout, 10, 40, long_p, MPFR_RNDD);
-          printf("\n");
-          fflush(stdout);
-      //  }
-      //}
-    }
-    fprintf(stderr, "Elapsed in c_30: %Lf secs\n\n", (real)(clock() - tic)/CLOCKS_PER_SEC);
-
+    tic = clock();
+    // we now loop over the diagonals i + j = s. As we already filled M(1, 1), we start with 3.
+    //for (int s = 3; s < a_max; s++) {
+    //  if (s == a_max - 1) {
+    //printf("%Lf, %Lf # m = %d, p = %7.6Lf\n", -logl(p), -p * logl(sum), m, p);
+    printf("m = %d, a_max = %d", m, a_max);
+    printf("p = %7.6Lf, \n", p);
+    printf("f (p, a_max) = %23.16Lf,\n", f(p, a_max));
+    mpfr_set_d(long_p, p, MPFR_RNDD);
+    fm(long_p, a_max);
+    printf("fm(p, a_max) =  ");
+    mpfr_out_str(stdout, 10, 40, long_p, MPFR_RNDD);
+    printf("\nn (p, a_max) = %23.16Lf,", n(p, a_max));
+    mpfr_set_d(long_p, p, MPFR_RNDD);
+    nm(long_p, a_max);
+    printf("\nnm(p, a_max) = , ");
+    mpfr_out_str(stdout, 10, 40, long_p, MPFR_RNDD);
+    printf("\n");
+    fflush(stdout);
+    //  }
+    //}
   }
+  fprintf(stderr, "Elapsed in c_30: %Lf secs\n\n", (real)(clock() - tic)/CLOCKS_PER_SEC);
   return 0;
 }
 
