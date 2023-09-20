@@ -6,7 +6,7 @@ use astro_float::RoundingMode;
 
 use grid::*;
 
-const PR: usize = 30;
+const PR: usize = 60;
 const RM: RoundingMode = RoundingMode::Up;
 const LOG_MULTIPLE: f64 = 1.5;
 
