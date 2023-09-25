@@ -1,3 +1,6 @@
+# jupyter
+jupyter/.ipynb_checkpoints/*
+
 *.pgm
 *.csv
 
