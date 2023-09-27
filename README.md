@@ -3,6 +3,11 @@
     sudo apt install libgmp-dev
     sudo apt install libmpfr-dev
 
+# for python
+
+    sudo apt install python3-sklearn
+    sudo apt install python3-notebook
+
 # bootstrap
 
 

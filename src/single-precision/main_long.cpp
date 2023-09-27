@@ -21,7 +21,7 @@ real normalize(real v) { return fmaxl(logl(v), -200); }
 int main(int argc, char **argv) {
   clock_t tic = clock(); // for timing purposes
   int m_min = 2; // we let p run from 2^{-m_min}, 2^{-2}, ..., 2^{-m_max} (inclusive).
-  int m_max = 11;
+  int m_max = 17;
   bool display_table = false;
   int m_for_image = 4; // this exponent will be used to build the table and the png image
   if (m_max < m_min) { return 1; };
@@ -73,7 +73,6 @@ int main(int argc, char **argv) {
     N2[1][1] = table[1][1][1] = p * n(p, 1);
     image[1][1] = p;
 
-    tic = clock();
     // we now loop over the diagonals i + j = s. As we already filled M(1, 1), we start with 3.
     for (int s = 3; s < a_max; s++) {
       // assign the pointers, depending on the role they play in the rotation
@@ -116,7 +115,7 @@ int main(int argc, char **argv) {
           if (max < current[0][l]) { max = current[0][l]; }
           sum += current[0][l];
         }
-        printf("%Lf, %Lf # m = %d, p = %7.6Lf, a = %d\n", -logl(p), -p * logl(sum), m, p, a_max);
+        printf("%Lf, %Lf # m = %d, p = %7.6Lf, a = %d, time = %f\n", -logl(p), -p * logl(sum), m, p, a_max, (float)(clock() - tic)/CLOCKS_PER_SEC);
         //printf("p = %7.6Lf, size = %7d, -p * log(diagonal sum) = %7.6Lf, m = %2d\n",
         //       p, a_max,-p * logl(sum), m);
         //printf("m = %d, N = %d, logl(sum{M(x, N-x)}) = %Lf, -logl(middle) = %Lf\n",

@@ -5,23 +5,23 @@
 //#include "omp.h"
 
 // on my machine, reals are 16 bytes long, which is twice as much as double
-typedef long double real;
+typedef float real;
 
 const real LOG_MULTIPLE = 1.5;
 // this updates a diagonal (s = a + b) with a given past. To be defined below.
 void c_modified(real p, int s, void*, void*, void*, int);
 bool IsPowerOfTwo(ulong x) { return (x != 0) && ((x & (x - 1)) == 0); }
 // there exists an infection among k fixed points
-real f(real p, int k) { return 1 - powl(1 - p, k); }
+real f(real p, int k) { return 1 - powf(1 - p, k); }
 // there is no infection in these k points
-real n(real p, int k) { return powl(1 - p, k); }
+real n(real p, int k) { return powf(1 - p, k); }
 // normalizing function for image generation
-real normalize(real v) { return fmaxl(logl(v), -200); }
+real normalize(real v) { return fmax(logf(v), -200); }
 
 int main(int argc, char **argv) {
   clock_t tic = clock(); // for timing purposes
   int m_min = 2; // we let p run from 2^{-m_min}, 2^{-2}, ..., 2^{-m_max} (inclusive).
-  int m_max = 11;
+  int m_max = 17;
   bool display_table = false;
   int m_for_image = 4; // this exponent will be used to build the table and the png image
   if (m_max < m_min) { return 1; };
@@ -29,8 +29,8 @@ int main(int argc, char **argv) {
   //if (m_for_image > m_max) { return 1; };
 
   // image inicialization
-  real p_for_image = powl(2.0, -m_for_image);
-  int a_max_for_image = (int) LOG_MULTIPLE * logl(1.0 / p_for_image) / p_for_image;
+  real p_for_image = powf(2.0, -m_for_image);
+  int a_max_for_image = (int) LOG_MULTIPLE * logf(1.0 / p_for_image) / p_for_image;
   real (*image)[a_max_for_image] = (real (*)[a_max_for_image])
     malloc(sizeof(real[a_max_for_image][a_max_for_image]));
   for (int a = 0; a < a_max_for_image; a++) {
@@ -47,8 +47,8 @@ int main(int argc, char **argv) {
 
   // loop through several values of p
   for (int m = m_min; m <= m_max; m++) {
-    real p = powl(2, -m);
-    int a_max = (int) (LOG_MULTIPLE * logl(1.0 / p) / p);
+    real p = powf(2, -m);
+    int a_max = (int) (LOG_MULTIPLE * logf(1.0 / p) / p);
 
     // N0, N1 will rotate to progress on the calculation
     // one will be the current one, being updated and the others will be the
@@ -73,7 +73,6 @@ int main(int argc, char **argv) {
     N2[1][1] = table[1][1][1] = p * n(p, 1);
     image[1][1] = p;
 
-    tic = clock();
     // we now loop over the diagonals i + j = s. As we already filled M(1, 1), we start with 3.
     for (int s = 3; s < a_max; s++) {
       // assign the pointers, depending on the role they play in the rotation
@@ -98,7 +97,7 @@ int main(int argc, char **argv) {
         for (int k = 0; k < 2; k++) {
           for (int a = 1; a < tab_w; a++) {
             if ((s - a <= tab_h) && (s - a > 0)) {
-              //printf("a = %d, s - a = %d, c = %Lf\n", a, s - a, -logl(current[k][a]));
+              //printf("a = %d, s - a = %d, c = %f\n", a, s - a, -logf(current[k][a]));
               table[k][a][s - a] = current[k][a];
             }
           }
@@ -116,11 +115,12 @@ int main(int argc, char **argv) {
           if (max < current[0][l]) { max = current[0][l]; }
           sum += current[0][l];
         }
-        printf("%Lf, %Lf # m = %d, p = %7.6Lf, a = %d\n", -logl(p), -p * logl(sum), m, p, a_max);
-        //printf("p = %7.6Lf, size = %7d, -p * log(diagonal sum) = %7.6Lf, m = %2d\n",
-        //       p, a_max,-p * logl(sum), m);
-        //printf("m = %d, N = %d, logl(sum{M(x, N-x)}) = %Lf, -logl(middle) = %Lf\n",
-        //       m, a_max, logl(sum), -logl(current[s/2]));
+        printf("%f, %f # m = %d, p = %7.6f, a = %d, time = %f\n",
+               -logf(p), -p * logf(sum), m, p, a_max, (float)(clock() - tic)/CLOCKS_PER_SEC);
+        //printf("p = %7.6Lf, size = %7d, -p * logf(diagonal sum) = %7.6Lf, m = %2d\n",
+        //       p, a_max,-p * logf(sum), m);
+        //printf("m = %d, N = %d, logf(sum{M(x, N-x)}) = %f, -logf(middle) = %f\n",
+        //       m, a_max, logf(sum), -logf(current[s/2]));
         fflush(stdout);
         if (m == m_for_image){
           // print tables
@@ -145,8 +145,8 @@ int main(int argc, char **argv) {
             printf("\n");
 
             // write image
-            printf("p_for_image = %Lf\n", p_for_image);
-            printf("log(p) = %Lf\n", logl(p_for_image));
+            printf("p_for_image = %f\n", p_for_image);
+            printf("log(p) = %f\n", logf(p_for_image));
             printf("a_max_for_image = %d\n", a_max_for_image);
             printf("image size = %d\n", a_max_for_image * a_max_for_image);
             // normalize image
@@ -197,7 +197,7 @@ int main(int argc, char **argv) {
       }
     }
   }
-  fprintf(stderr, "Elapsed in c_30: %Lf secs\n\n", (real)(clock() - tic)/CLOCKS_PER_SEC);
+  fprintf(stderr, "Elapsed in c_30: %f secs\n\n", (real)(clock() - tic)/CLOCKS_PER_SEC);
   return 0;
 }
 
