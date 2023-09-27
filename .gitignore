@@ -2,7 +2,6 @@
 jupyter/.ipynb_checkpoints/*
 
 *.pgm
-*.csv
 
 # Prerequisites
 *.d
