@@ -9,7 +9,7 @@ typedef float real;
 
 const real LOG_MULTIPLE = 1.5;
 // this updates a diagonal (s = a + b) with a given past. To be defined below.
-void c_modified(real p, int s, void*, void*, void*, int, real, real, real);
+void c_modified(real p, int s, void*, void*, void*, int, double, double, double);
 
 // there exists an infection among k fixed points
 real f(real p, int k) { return 1 - powf(1 - p, k); }
@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     int a_max = (int) (LOG_MULTIPLE * logf(1.0 / p) / p);
 
     // the probabilities will be saved with a normalizing factor
-    real* log_normalizer = new real[a_max + 1];
+    double* log_normalizer = new double[a_max + 1];
     // so that the value M_k[a][b] = exp(log_normalizer[a + b]) current[k][a]
     for (int i = 0; i < a_max; i++) {
       log_normalizer[i] = 0.0;
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
     N2[1][1] = p * n(p, 1);  // note that log_normalize is zero at 1, so no change
 
     // we now set log_normalize[3]
-    log_normalizer[3] = logf(N2[0][1]);
+    log_normalizer[3] = log((double) N2[0][1]);
 
     // we now loop over the diagonals i + j = s. As we already filled M(1, 1), we start with 3.
     for (int s = 3; s < a_max; s++) {
@@ -79,11 +79,11 @@ int main(int argc, char **argv) {
                  log_normalizer[s], log_normalizer[s - 1], log_normalizer[s - 2]);
 
       // calculate log_normalizer
-      real max = 0.0;
+      double max = 0.0;
       for (int l = 0; l < a_max; l++) {
-        if (max < current[0][l]) { max = current[0][l]; }
+        if (max < (double) current[0][l]) { max = (double) current[0][l]; }
       }
-      log_normalizer[s + 1] = logf(max) + log_normalizer[s];
+      log_normalizer[s + 1] = log(max) + log_normalizer[s];
 
       // if we are at the last diagonal, calculate max and sum and print
       if (s == a_max - 1) {
@@ -112,12 +112,12 @@ void c_modified(
   void *p1,
   void *p2,
   int a_max,
-  real ln0,
-  real ln1,
-  real ln2)
+  double ln0,
+  double ln1,
+  double ln2)
 {
-  real convert_from_1 = expf(ln1 - ln0);
-  real convert_from_2 = expf(ln2 - ln0);
+  real convert_from_1 = exp(ln1 - ln0);
+  real convert_from_2 = exp(ln2 - ln0);
   real (*output)[a_max] = static_cast<real (*)[a_max]>(o);
   real (*past1)[a_max] = static_cast<real (*)[a_max]>(p1);
   real (*past2)[a_max] = static_cast<real (*)[a_max]>(p2);
@@ -126,9 +126,7 @@ void c_modified(
     int b = s - a;
     output[0][a] = f(p, b) * convert_from_1 * past1[0][a - 1]
       + p * convert_from_2 * past2[1][a - 1];
-    if (output[0][a] < 0.0000001) { output[0][a] = 0.0; }
     output[1][a] = (1 - p) * f(p, a) * convert_from_1 * past1[1][a]
       + n(p, b) * output[0][a];
-    if (output[1][a] < 0.0000001) { output[1][a] = 0.0; }
   }
 }

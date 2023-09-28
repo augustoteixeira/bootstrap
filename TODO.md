@@ -1,4 +1,5 @@
-- use double and store multiple of diagonal
+- interpolation
+- how to make the linear regression? Eliminate how many initial terms?
 
 
 
