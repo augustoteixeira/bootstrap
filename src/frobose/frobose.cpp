@@ -2,14 +2,15 @@
 #include <time.h>
 #include <math.h>
 
-#include "omp.h"
+// #include "omp.h"
 
 // on my machine, reals are 16 bytes long, which is twice as much as double
 typedef float real;
 
 const real LOG_MULTIPLE = 1.5;
 // this updates a diagonal (s = a + b) with a given past. To be defined below.
-void c_modified(real p, int s, void*, void*, void*, void*, void*, int, real, real, real, real, real, real*);
+void c_modified(int min_nonzero, real p, int s, void*, void*, void*, void*, void*,
+                int, real, real, real, real, real, real*);
 
 // there exists an infection among k fixed points
 real f(real p, int k) { return 1 - powf(1 - p, k); }
@@ -19,7 +20,7 @@ real n(real p, int k) { return powf(1 - p, k); }
 int main(int argc, char **argv) {
   clock_t tic = clock(); // for timing purposes
   int m_min = 2; // we let p run from 2^{-m_min}, 2^{-2}, ..., 2^{-m_max} (inclusive).
-  int m_max = 14;
+  int m_max = 15;
   if (m_max < m_min) { return 1; };
 
   FILE *fpt;
@@ -31,12 +32,11 @@ int main(int argc, char **argv) {
     int a_max = (int) (LOG_MULTIPLE * logf(1.0 / p) / p);
 
     // the probabilities will be saved with a normalizing factor
-    real* log_normalizer = new real[a_max + 3]; // here we add 3 because of shifting below and +1 later
     // so that the value M_k[a][b] = exp(log_normalizer[a + b]) current[k][a]
+    real* log_normalizer = new real[a_max + 3]; // here we add 3 because of shifting below and +1 later
     for (int i = 0; i < a_max + 3; i++) {
       log_normalizer[i] = 0.0;
     }
-
     log_normalizer += 2; // here we shift it to obtain two allow access to [-1]
 
     // N0, N1 will rotate to progress on the calculation
@@ -70,6 +70,8 @@ int main(int argc, char **argv) {
     N2[5][1] = 0;
     N2[6][1] = 0;
 
+    int min_nonzero = 0;
+
     // we now set log_normalize[3]
     log_normalizer[3] = logf(N2[0][1]);
 
@@ -95,8 +97,21 @@ int main(int argc, char **argv) {
       }
 
       // fill the current array with an auxiliary function (implemented below)
-      c_modified(p, s, current, past1, past2, past3, past4, a_max,
-                 log_normalizer[s], log_normalizer[s - 1], log_normalizer[s - 2], log_normalizer[s - 3], log_normalizer[s - 4], log_normalizer + (s + 1));
+      c_modified(min_nonzero, p, s, current, past1, past2, past3, past4, a_max,
+                 log_normalizer[s], log_normalizer[s - 1], log_normalizer[s - 2],
+                 log_normalizer[s - 3], log_normalizer[s - 4], log_normalizer + (s + 1));
+
+      int nz = fmax(0, min_nonzero - 5);
+      for (; nz < a_max; nz++) {
+        if ((current[0][nz] != 0) ||
+            (current[1][nz] != 0) ||
+            (current[2][nz] != 0) ||
+            (current[3][nz] != 0) ||
+            (current[4][nz] != 0) ||
+            (current[5][nz] != 0) ||
+            (current[6][nz] != 0)) {break;}
+      }
+      int min_nonzero = fmax(0, nz - 5);
 
       // if we are at the last diagonal, calculate max and sum and print
       if (s == a_max - 1) {
@@ -108,26 +123,45 @@ int main(int argc, char **argv) {
                log_normalizer[s]);
         printf("log(sum) = %8.3f, ",
                log(sum));
-        printf("log(p) = %7.6f, -p log(sum) = %7.6f # m = %d, p = %7.6f, a = %d, time = %f\n",
-               -logf(p), -p * (logf(sum) + log_normalizer[s]), m, p, a_max, (float)(clock() - tic)/CLOCKS_PER_SEC);
+        printf("log(p) = %7.6f, -p log(sum) = %7.6f # m = %d, p = %7.6f, a = %d, nz = %d, time = %f\n",
+               -logf(p), -p * (logf(sum) + log_normalizer[s]), m, p, a_max, min_nonzero, (float)(clock() - tic)/CLOCKS_PER_SEC);
         fflush(stdout);
         fprintf(fpt, "%14.7f, %14.7f\n", -p * (logf(sum) + log_normalizer[s]), p);
       }
     }
+    free(N0);
+    free(N1);
+    free(N2);
+    free(N3);
+    free(N4);
+    //delete [] log_normalizer;
   }
   printf("Elapsed in c_30: %f secs\n\n", (real)(clock() - tic)/CLOCKS_PER_SEC);
   fclose(fpt);
   return 0;
 }
 
+void update6(real* fp, real p, int s, real p2q2, real* output6, real convert_from_3,
+             real* past33, real q, real convert_from_1, real* past16) {
+  for (int a = 1; a < s; a++) {
+    int b = s - a;
+    output6[a]
+      = fp[a] * p2q2 * convert_from_3 * past33[a - 2]   // 3 -> 6
+      + fp[b] * q * convert_from_1 * past16[a - 1];     // 6 -> 6
+    // trim small values
+    if (output6[a] < 0.0000001) { output6[a] = 0.0; }
+  }
+}
+
 void c_modified(
+  int min_nonzero,
   real p,
   int s,
   void *o,
-  void *p1,
-  void *p2,
-  void *p3,
-  void *p4,
+  void *P1,
+  void *P2,
+  void *P3,
+  void *P4,
   int a_max,
   real ln0,
   real ln1,
@@ -141,68 +175,107 @@ void c_modified(
   real convert_from_3 = expf(ln3 - ln0);
   real convert_from_4 = expf(ln4 - ln0);
   real (*output)[a_max] = static_cast<real (*)[a_max]>(o);
-  real (*past1)[a_max] = static_cast<real (*)[a_max]>(p1);
-  real (*past2)[a_max] = static_cast<real (*)[a_max]>(p2);
-  real (*past3)[a_max] = static_cast<real (*)[a_max]>(p3);
-  real (*past4)[a_max] = static_cast<real (*)[a_max]>(p4);
+  real (*past1)[a_max] = static_cast<real (*)[a_max]>(P1);
+  real (*past2)[a_max] = static_cast<real (*)[a_max]>(P2);
+  real (*past3)[a_max] = static_cast<real (*)[a_max]>(P3);
+  real (*past4)[a_max] = static_cast<real (*)[a_max]>(P4);
 
   // running max for log_normalizer
   real max = 0.0;
 
-  //pragma omp parallel for
-  for (int a = 1; a < s; a++) {
-    // order 0, 1, 6, 5, 4, 2, 3
+  real q = 1 - p;
+  real p2 = p * p;
+  real q2 = q * q;
+  real pq = p * q;
+  real pq2 = p * q * q;
+  real p2q2 = p * p * q * q;
+  real p3q = p * p * p * q;
+  real p4 = p * p * p * p;
+
+  real* fp = new real[a_max];
+  for (int a = 0; a < a_max; a++) {
+    fp[a] = f(p, a);
+  }
+  real* np = new real[a_max];
+  for (int a = 0; a < a_max; a++) {
+    np[a] = n(p, a);
+  }
+
+  // order 0, 1, 6, 5, 4, 2, 3
+  // pragma omp parallel for
+  for (int a = min_nonzero; a < s; a++) {
     int b = s - a;
     output[0][a]
-      = f(p, b) * convert_from_1 * past1[0][a - 1]         // 0 -> 0
-      + f(p, a) * p * convert_from_2 * past2[1][a - 1]     // 1 -> 0
-      + f(p, b) * p * p * convert_from_3 * past3[2][a - 2] // 2 -> 0
-      + (4 * f(p, a) * p * p * p * n(p, 1) + p*p*p*p) * convert_from_4 * past4[3][a - 2] // 3 -> 0
-      + f(p, b) * p * p * convert_from_3 * past3[4][a - 2] // 4 -> 0
-      + f(p, a) * p * convert_from_2 * past2[5][a - 1]     // 5 -> 0
-      + f(p, b) * p * convert_from_2 * past2[6][a - 1];    // 6 -> 0
+      = fp[b] * convert_from_1 * past1[0][a - 1]         // 0 -> 0
+      + fp[a] * p * convert_from_2 * past2[1][a - 1]     // 1 -> 0
+      + fp[b] * p2 * convert_from_3 * past3[2][a - 2]    // 2 -> 0
+      + (4 * fp[a] * p3q + p4) * convert_from_4 * past4[3][a - 2] // 3 -> 0
+      + fp[b] * p2 * convert_from_3 * past3[4][a - 2]    // 4 -> 0
+      + fp[a] * p * convert_from_2 * past2[5][a - 1]     // 5 -> 0
+      + fp[b] * p * convert_from_2 * past2[6][a - 1];    // 6 -> 0
     // trim small values
     if (output[0][a] < 0.0000001) { output[0][a] = 0.0; }
     // update running max
     if (max < output[0][a]) { max = output[0][a]; }
+  }
+  *ln_next = logf(max) + ln0;
+  for (int a = min_nonzero; a < s; a++) {
+    int b = s - a;
     output[1][a]
-      = n(p, b) * output[0][a]                                    // 0 -> 1
-      + f(p, a) * (1 - p) * convert_from_1 * past1[1][a]          // 1 -> 1
-      + f(p, b) * p * (1 - p) * convert_from_2 * past2[2][a - 1]  // 2 -> 1
-      + f(p, a) * p * p * (1 - p) * (1 - p) * convert_from_3 * past3[3][a - 1];  // 3 -> 1
+      = np[b] * output[0][a]                              // 0 -> 1
+      + fp[a] * q * convert_from_1 * past1[1][a]          // 1 -> 1
+      + fp[b] * pq * convert_from_2 * past2[2][a - 1]     // 2 -> 1
+      + fp[a] * p2q2 * convert_from_3 * past3[3][a - 1];  // 3 -> 1
     // trim small values
     if (output[1][a] < 0.0000001) { output[1][a] = 0.0; }
+  }
+  //update6(fp, p, s, p2q2, &output[6][0], convert_from_3,
+  //        &past3[3][0], q, convert_from_1, &past1[6][0]);
+  for (int a = min_nonzero; a < s; a++) {
+    int b = s - a;
     output[6][a]
-      = f(p, a) * p * p * (1 - p) * (1 - p) * convert_from_3 * past3[3][a - 2]  // 3 -> 6
-      + f(p, b) * (1 - p) * convert_from_1 * past1[6][a - 1];     // 6 -> 6
+      = fp[a] * p2q2 * convert_from_3 * past3[3][a - 2]   // 3 -> 6
+      + fp[b] * q * convert_from_1 * past1[6][a - 1];     // 6 -> 6
     // trim small values
     if (output[6][a] < 0.0000001) { output[6][a] = 0.0; }
+  }
+  for (int a = min_nonzero; a < s; a++) {
+    int b = s - a;
     output[5][a]
-      = f(p, a) * p * p * (1 - p) * (1 - p) * convert_from_3 * past3[3][a - 1]  // 3 -> 5
-      + f(p, b) * p * (1 - p) * convert_from_2 * past2[4][a - 1]  // 4 -> 5
-      + f(p, a) * (1 - p) * convert_from_1 * past1[5][a];         // 5 -> 5
+      = fp[a] * p2q2 * convert_from_3 * past3[3][a - 1]   // 3 -> 5
+      + fp[b] * pq * convert_from_2 * past2[4][a - 1]     // 4 -> 5
+      + fp[a] * q * convert_from_1 * past1[5][a];         // 5 -> 5
     // trim small values
     if (output[5][a] < 0.0000001) { output[5][a] = 0.0; }
+  }
+  for (int a = min_nonzero; a < s; a++) {
+    int b = s - a;
     output[4][a]
-      = f(p, a) * p * (1 - p) * (1 - p) * convert_from_2 * past2[3][a - 1]  // 3 -> 4
-      + f(p, b) * (1 - p) * convert_from_1 * past1[4][a - 1]      // 4 -> 4
-      + n(p, a) * output[5][a];                                   // 5 -> 4
+      = fp[a] * pq2 * convert_from_2 * past2[3][a - 1]    // 3 -> 4
+      + fp[b] * q * convert_from_1 * past1[4][a - 1]      // 4 -> 4
+      + np[a] * output[5][a];                             // 5 -> 4
     // trim small values
     if (output[4][a] < 0.0000001) { output[4][a] = 0.0; }
+  }
+  for (int a = min_nonzero; a < s; a++) {
+    int b = s - a;
     output[2][a]
-      = n(p, a) * output[1][a]                                    // 1 -> 2
-      + f(p, b) * (1 - p) * convert_from_1 * past1[2][a - 1]      // 2 -> 2
-      + f(p, a) * p * (1 - p) * (1 - p) * convert_from_2 * past2[3][a - 1]  // 3 -> 2
-      + n(p, b) * output[6][a];                                   // 6 -> 2
+      = np[a] * output[1][a]                              // 1 -> 2
+      + fp[b] * q * convert_from_1 * past1[2][a - 1]      // 2 -> 2
+      + fp[a] * pq2 * convert_from_2 * past2[3][a - 1]    // 3 -> 2
+      + np[b] * output[6][a];                             // 6 -> 2
     // trim small values
     if (output[2][a] < 0.0000001) { output[2][a] = 0.0; }
+  }
+  for (int a = min_nonzero; a < s; a++) {
+    int b = s - a;
     output[3][a]
-      + n(p, b) * output[2][a]                                     // 2 -> 3
-      + f(p, a) * (1 - p) * (1 - p) * convert_from_1 * past1[3][a] // 3 -> 3
-      + n(p, b) * output[4][a];                                    // 4 -> 3
+      + np[b] * output[2][a]                              // 2 -> 3
+      + fp[a] * q2 * convert_from_1 * past1[3][a]         // 3 -> 3
+      + np[b] * output[4][a];                             // 4 -> 3
     // trim small values
     if (output[3][a] < 0.0000001) { output[3][a] = 0.0; }
   }
-  //printf("\ns = %d, amax = %d, max = %15.10f\n", s, a_max, max);
-  *ln_next = logf(max) + ln0;
+  delete [] fp; // TODO try to have a global fp
+  delete [] np;
 }
