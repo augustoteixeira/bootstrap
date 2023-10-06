@@ -19,7 +19,7 @@ real n(real p, int k) { return powf(1 - p, k); }
 int main(int argc, char **argv) {
   clock_t tic = clock(); // for timing purposes
   int m_min = 2; // we let p run from 2^{-m_min}, 2^{-2}, ..., 2^{-m_max} (inclusive).
-  int m_max = 11;
+  int m_max = 14;
   if (m_max < m_min) { return 1; };
 
   FILE *fpt;

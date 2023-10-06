@@ -17,7 +17,7 @@ with open('./report.csv', newline='') as csvfile:
         p.append(float(row[1]))
 
 pp = []
-for m in range(2, 12):
+for m in range(2, 15):
     pp.append(2**(-m))
 
 pls = np.array(pls)
