@@ -1,16 +1,9 @@
-log_norm =    -4.421, log(sum) =    0.629, log(p) = 1.386294, -p log(sum) = 0.948026 # m = 2, p = 0.250000, a = 8, nz = 0, time = 0.000084
-log_norm =   -12.550, log(sum) =    1.497, log(p) = 2.079442, -p log(sum) = 1.381649 # m = 3, p = 0.125000, a = 24, nz = 0, time = 0.000112
-log_norm =   -31.081, log(sum) =    2.307, log(p) = 2.772589, -p log(sum) = 1.798369 # m = 4, p = 0.062500, a = 66, nz = 0, time = 0.000178
-log_norm =   -70.842, log(sum) =    3.073, log(p) = 3.465736, -p log(sum) = 2.117765 # m = 5, p = 0.031250, a = 166, nz = 0, time = 0.000519
-log_norm =  -137.538, log(sum) =    3.859, log(p) = 4.158883, -p log(sum) = 2.088732 # m = 6, p = 0.015625, a = 399, nz = 0, time = 0.002318
-log_norm =  -237.625, log(sum) =    4.171, log(p) = 4.852030, -p log(sum) = 1.823862 # m = 7, p = 0.007812, a = 931, nz = 0, time = 0.011818
-log_norm =  -467.733, log(sum) =    4.737, log(p) = 5.545177, -p log(sum) = 1.808576 # m = 8, p = 0.003906, a = 2129, nz = 0, time = 0.060764
-log_norm = -1446.062, log(sum) =    5.587, log(p) = 6.238325, -p log(sum) = 2.813428 # m = 9, p = 0.001953, a = 4791, nz = 1833, time = 0.314665
-log_norm = -3082.367, log(sum) =    6.213, log(p) = 6.931472, -p log(sum) = 3.004057 # m = 10, p = 0.000977, a = 10646, nz = 4266, time = 1.560772
-log_norm = -6362.599, log(sum) =    6.837, log(p) = 7.624619, -p log(sum) = 3.103400 # m = 11, p = 0.000488, a = 23422, nz = 9726, time = 7.638163
-log_norm = -12946.543, log(sum) =    7.459, log(p) = 8.317766, -p log(sum) = 3.158956 # m = 12, p = 0.000244, a = 51104, nz = 21826, time = 36.785366
-log_norm = -26199.049, log(sum) =    8.080, log(p) = 9.010913, -p log(sum) = 3.197140 # m = 13, p = 0.000122, a = 110726, nz = 48377, time = 179.210236
-log_norm = -52824.625, log(sum) =    8.702, log(p) = 9.704061, -p log(sum) = 3.223628 # m = 14, p = 0.000061, a = 238487, nz = 106162, time = 888.563538
-log_norm = -106263.836, log(sum) =    9.318, log(p) = 10.397207, -p log(sum) = 3.242630 # m = 15, p = 0.000031, a = 511043, nz = 0, time = 4273.875000
-Elapsed in c_30: 4273.883301 secs
-
+log_norm =    -4.421, log(sum) =    0.629, log(p) = 1.386294, -p log(sum) = 0.948026 # m = 2, p = 0.250000, a = 8, nz = 0, time = 0.000068
+log_norm =   -12.550, log(sum) =    1.497, log(p) = 2.079442, -p log(sum) = 1.381649 # m = 3, p = 0.125000, a = 24, nz = 0, time = 0.000098
+log_norm =   -31.081, log(sum) =    2.307, log(p) = 2.772589, -p log(sum) = 1.798369 # m = 4, p = 0.062500, a = 66, nz = 0, time = 0.000171
+log_norm =   -70.842, log(sum) =    3.073, log(p) = 3.465736, -p log(sum) = 2.117765 # m = 5, p = 0.031250, a = 166, nz = 0, time = 0.000562
+log_norm =  -137.538, log(sum) =    3.859, log(p) = 4.158883, -p log(sum) = 2.088732 # m = 6, p = 0.015625, a = 399, nz = 0, time = 0.002429
+log_norm =  -237.625, log(sum) =    4.171, log(p) = 4.852030, -p log(sum) = 1.823862 # m = 7, p = 0.007812, a = 931, nz = 0, time = 0.011837
+log_norm =  -467.733, log(sum) =    4.737, log(p) = 5.545177, -p log(sum) = 1.808576 # m = 8, p = 0.003906, a = 2129, nz = 0, time = 0.060504
+log_norm = -1446.062, log(sum) =    5.587, log(p) = 6.238325, -p log(sum) = 2.813428 # m = 9, p = 0.001953, a = 4791, nz = 1833, time = 0.313001
+# Elapsed Time: 1 seconds

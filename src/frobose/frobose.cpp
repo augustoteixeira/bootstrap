@@ -20,7 +20,7 @@ real n(real p, int k) { return powf(1 - p, k); }
 int main(int argc, char **argv) {
   clock_t tic = clock(); // for timing purposes
   int m_min = 2; // we let p run from 2^{-m_min}, 2^{-2}, ..., 2^{-m_max} (inclusive).
-  int m_max = 15;
+  int m_max = 17;
   if (m_max < m_min) { return 1; };
 
   FILE *fpt;
@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
         printf("log(p) = %7.6f, -p log(sum) = %7.6f # m = %d, p = %7.6f, a = %d, nz = %d, time = %f\n",
                -logf(p), -p * (logf(sum) + log_normalizer[s]), m, p, a_max, min_nonzero, (float)(clock() - tic)/CLOCKS_PER_SEC);
         fflush(stdout);
-        fprintf(fpt, "%14.7f, %14.7f\n", -p * (logf(sum) + log_normalizer[s]), p);
+        fprintf(fpt, "%d, %14.7f\n", m, -p * (logf(sum) + log_normalizer[s]));
       }
     }
     free(N0);
