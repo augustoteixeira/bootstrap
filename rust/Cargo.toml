@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 astro-float = "0.7.1"
 grid = "0.11.0"
+ndarray = "0.15.6"
