@@ -1,55 +1,74 @@
 use grid::*;
+use std::time::Instant;
 
-const LOG_MULTIPLE: f64 = 1.5;
+mod alg;
+mod floats;
+mod log;
 
-fn n(p: f64, n: i32) -> f64 {
-    (1.0 - p).powi(n)
+//use alg::*;
+//type Real = Alg<f64>;
+
+use log::*;
+type Real = Log<f32>;
+
+fn n(p: Real, n: i32) -> Real {
+    (Real::new(1.0) - p).powi(n)
 }
 
-fn f(p: f64, n: i32) -> f64 {
-    1.0 - (1.0 - p).powi(n)
+fn f(p: Real, n: i32) -> Real {
+    Real::new(1.0) - (Real::new(1.0) - p).powi(n)
 }
 
 fn main() {
+    let log_multiple: f64 = 1.5;
+    println!("0.0.ln() = {}", (0.0 as f32).ln());
+    let zero = Real::new(0.0);
+    println!("zero = {:}", zero);
+    let two = Real::new(2.0);
     let m_min = 4;
     //let m_table = 2;
-    let m_max = 12;
+    let m_max = 20;
+
+    let start = Instant::now();
     for m in m_min..=m_max {
-        let p: f64 = (2.0 as f64).powi(-m);
+        let p: Real = two.powi(-m);
         // println!(
         //     "p = {}, log(1/p) = {}, log(1/p)/p = {}, all = {}",
         //     p,
         //     (1.0 / p).ln(),
         //     (1.0 / p).ln() / p,
-        //     (LOG_MULTIPLE * (1.0 / p).ln() / p)
+        //     (log_multiple * (1.0 / p).ln() / p)
         // );
-        let a: usize = (LOG_MULTIPLE * (1.0 / p).ln() / p) as usize;
-        // let mut n00: Vec<f64> = Vec::with_capacity(a);
-        // let mut n01: Vec<f64> = Vec::with_capacity(a);
-        // let mut n10: Vec<f64> = Vec::with_capacity(a);
-        // let mut n11: Vec<f64> = Vec::with_capacity(a);
-        // let mut n20: Vec<f64> = Vec::with_capacity(a);
-        // let mut n21: Vec<f64> = Vec::with_capacity(a);
-        let mut n0: Grid<f64> = Grid::new(7, a);
-        let mut n1: Grid<f64> = Grid::new(7, a);
-        let mut n2: Grid<f64> = Grid::new(7, a);
-        let mut n3: Grid<f64> = Grid::new(7, a);
 
-        let mut current: &mut Grid<f64>;
-        let mut past1: &mut Grid<f64>;
-        let mut past2: &mut Grid<f64>;
-        let mut past3: &mut Grid<f64>;
+        let a: usize =
+            (log_multiple * (1.0 / p.to_float()).ln() / p.to_float()) as usize;
+
+        // let mut n00: Vec<Real> = Vec::with_capacity(a);
+        // let mut n01: Vec<Real> = Vec::with_capacity(a);
+        // let mut n10: Vec<Real> = Vec::with_capacity(a);
+        // let mut n11: Vec<Real> = Vec::with_capacity(a);
+        // let mut n20: Vec<Real> = Vec::with_capacity(a);
+        // let mut n21: Vec<Real> = Vec::with_capacity(a);
+        let mut n0: Grid<Real> = Grid::new(7, a);
+        let mut n1: Grid<Real> = Grid::new(7, a);
+        let mut n2: Grid<Real> = Grid::new(7, a);
+        let mut n3: Grid<Real> = Grid::new(7, a);
+
+        let mut current: &mut Grid<Real>;
+        let mut past1: &mut Grid<Real>;
+        let mut past2: &mut Grid<Real>;
+        let mut past3: &mut Grid<Real>;
 
         // //let tab_h = 6;
         // //let tab_w = 5;
-        // //let mut table: Grid<f64> = Grid::new(tab_w, tab_h);
+        // //let mut table: Grid<Real> = Grid::new(tab_w, tab_h);
 
         for k in 0..7 {
             for s in 0..a {
-                n0[(k, s)] = 0.0;
-                n1[(k, s)] = 0.0;
-                n2[(k, s)] = 0.0;
-                n3[(k, s)] = 0.0;
+                n0[(k, s)] = zero;
+                n1[(k, s)] = zero;
+                n2[(k, s)] = zero;
+                n3[(k, s)] = zero;
             }
         }
 
@@ -57,6 +76,11 @@ fn main() {
         n2[(1, 1)] = p * n(p, 1);
         n2[(2, 1)] = p * n(p, 2);
         n2[(3, 1)] = p * n(p, 3);
+
+        // println!("n2[(0, 1)] = {}", n2[(0, 1)]);
+        // println!("n2[(1, 1)] = {}", n2[(1, 1)]);
+        // println!("n2[(2, 1)] = {}", n2[(2, 1)]);
+        // println!("n2[(3, 1)] = {}", n2[(3, 1)]);
 
         // n20[1] = p;
         // n21[1] = p * p.n(1);
@@ -110,20 +134,22 @@ fn main() {
             //     }
 
             if s == a - 1 {
-                let mut sum: f64 = 0.0;
-                let mut max: f64 = 0.0;
+                let mut sum: Real = zero;
+                let mut max: Real = zero;
                 for l in 0..a {
-                    if (max < current[(0, l)]) {
+                    //println!("current[(0, {})] = {}", l, current[(0, l)]);
+                    if max < current[(0, l)] {
                         max = current[(0, l)]
                     }
-                    sum += current[(0, l)];
+                    sum = sum + current[(0, l)];
                 }
                 println!(
-                    "p = {}, size = {}, -p * log(diag sum) = {}, m = {}",
+                    "p = {}, size = {}, -p * log(diag sum) = {}, m = {}, t = {:?}",
                     p,
                     a,
-                    -p * sum.ln(),
-                    m
+                    -(p.to_float() * sum.ln_to_float()),
+                    m,
+                    start.elapsed()
                 );
             }
 
@@ -133,7 +159,7 @@ fn main() {
             //         for a in 0..tab_w {
             //             print!("M[{a}, {b}] = ");
             //             let value = table[a][b].ln(PR, RM, &mut cc).mul(
-            //                 &f64::from(-1.0),
+            //                 &Real::from(-1.0),
             //                 PR,
             //                 RM,
             //             );
@@ -146,14 +172,16 @@ fn main() {
 }
 
 fn modified(
-    p: f64,
+    p: Real,
     s: usize,
-    o: &mut Grid<f64>,
-    p1: &mut Grid<f64>,
-    p2: &mut Grid<f64>,
-    p3: &mut Grid<f64>,
+    o: &mut Grid<Real>,
+    p1: &mut Grid<Real>,
+    p2: &mut Grid<Real>,
+    p3: &mut Grid<Real>,
 ) {
-    let q = 1.0 - p;
+    let zero = Real::new(0.0);
+    let one = Real::new(1.0);
+    let q = one - p;
     for a in 1..s {
         let b: i32 = (s - a) as i32;
         o[(0, a)] = p * (p2[(1, a - 1)] + p2[(5, a - 1)] + p2[(6, a - 1)])
@@ -163,7 +191,7 @@ fn modified(
             + p * p2[(2, a - 1)];
         o[(5, a)] = q * f(p, a as i32) * p1[(5, a)] + p * p2[(4, a - 1)];
         if a < 3 {
-            o[(6, a)] = 0.0;
+            o[(6, a)] = zero;
         } else {
             o[(6, a)] = q * f(p, b) * p1[(6, a - 1)] + p * p * p3[(3, a - 2)];
         }
