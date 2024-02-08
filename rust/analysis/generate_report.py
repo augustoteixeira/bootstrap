@@ -13,6 +13,7 @@ with open('./report.csv', newline='') as csvfile:
     m_array = []
     pls = []
     for row in reader:
+        print(row)
         m_array.append(int(row[0]))
         pls.append(float(row[1]))
 

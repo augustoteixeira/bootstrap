@@ -25,9 +25,9 @@ fn main() {
     let zero = Real::new(0.0);
     println!("zero = {:}", zero);
     let two = Real::new(2.0);
-    let m_min = 4;
+    let m_min = 2;
     //let m_table = 2;
-    let m_max = 20;
+    let m_max = 2;
 
     let start = Instant::now();
     for m in m_min..=m_max {
@@ -40,8 +40,8 @@ fn main() {
         //     (log_multiple * (1.0 / p).ln() / p)
         // );
 
-        let a: usize =
-            (log_multiple * (1.0 / p.to_float()).ln() / p.to_float()) as usize;
+        let a: usize = (log_multiple * (1.0 / p.to_float()).ln() / p.to_float())
+            .floor() as usize;
 
         // let mut n00: Vec<Real> = Vec::with_capacity(a);
         // let mut n01: Vec<Real> = Vec::with_capacity(a);
@@ -121,6 +121,9 @@ fn main() {
                 }
                 _ => unreachable!(),
             }
+            for a in 1..s {
+                println!("s = {s}, p1[0, {a}] = {}", past1[(0, a)]);
+            }
             modified(p, s, &mut current, &mut past1, &mut past2, &mut past3);
 
             //     if m == m_table {
@@ -184,6 +187,7 @@ fn modified(
     let q = one - p;
     for a in 1..s {
         let b: i32 = (s - a) as i32;
+        println!("p = {p}, p2[1, {a}-1] = {}, p2[(5, {a} - 1)] = {}, p2[(6, {a} - 1)] = {}), f(p, {b}) = {}, p1[0, {a}-1] = {}", p2[(1, a - 1)], p2[(5, a - 1)], p2[(6, a - 1)], f(p, b), p1[(0, a - 1)]);
         o[(0, a)] = p * (p2[(1, a - 1)] + p2[(5, a - 1)] + p2[(6, a - 1)])
             + f(p, b) * p1[(0, a - 1)];
         o[(1, a)] = q * f(p, a as i32) * p1[(1, a)]
@@ -205,5 +209,6 @@ fn modified(
         o[(3, a)] = q * q * f(p, a as i32) * p1[(3, a)]
             + q * n(p, b) * o[(2, a)]
             + q * n(p, b) * o[(4, a)];
+        println!("s = {}, o[0, {}] = {}", s, a, o[(0, a)]);
     }
 }
