@@ -209,7 +209,7 @@ void c_modified(
       = fp[b] * convert_from_1 * past1[0][a - 1]         // 0 -> 0
       + fp[a] * p * convert_from_2 * past2[1][a - 1]     // 1 -> 0
       + fp[b] * p2 * convert_from_3 * past3[2][a - 2]    // 2 -> 0
-      + (4 * fp[a] * p3q + p4) * convert_from_4 * past4[3][a - 2] // 3 -> 0
+      + (4 * p3q + p4) * fp[a] * convert_from_4 * past4[3][a - 2] // 3 -> 0
       + fp[b] * p2 * convert_from_3 * past3[4][a - 2]    // 4 -> 0
       + fp[a] * p * convert_from_2 * past2[5][a - 1]     // 5 -> 0
       + fp[b] * p * convert_from_2 * past2[6][a - 1];    // 6 -> 0

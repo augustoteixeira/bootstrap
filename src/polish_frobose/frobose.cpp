@@ -6,7 +6,7 @@
 
 // on my machine, long doubles are 16 bytes long, which is twice as much as double
 typedef double real;
-const real TRUNCATE_LOW = 0.00000000001;
+const real TRUNCATE_LOW = 0.0000001;
 const real LOG_MULTIPLE = 5;
 
 // this updates a diagonal (s = a + b) with a given past. To be defined below.
@@ -20,8 +20,8 @@ real n(real p, int k) { return pow(1 - p, k); }
 
 int main(int argc, char **argv) {
   clock_t tic = clock(); // for timing purposes
-  int m_min = 8; // we let p run from 2^{-m_min}, 2^{-2}, ..., 2^{-m_max} (inclusive).
-  int m_max = 8;
+  int m_min = 2; // we let p run from 2^{-m_min}, 2^{-2}, ..., 2^{-m_max} (inclusive).
+  int m_max = 11;
   if (m_max < m_min) { return 1; };
 
   FILE *fpt;
@@ -106,13 +106,13 @@ int main(int argc, char **argv) {
 
       int nz = fmax(0, min_nonzero - 5);
       for (; nz < a_max; nz++) {
-        if ((current[0][nz] != 0) ||
-            (current[1][nz] != 0) ||
-            (current[2][nz] != 0) ||
-            (current[3][nz] != 0) ||
-            (current[4][nz] != 0) ||
-            (current[5][nz] != 0) ||
-            (current[6][nz] != 0)) {break;}
+        if ((current[0][nz] <= TRUNCATE_LOW) ||
+            (current[1][nz] <= TRUNCATE_LOW) ||
+            (current[2][nz] <= TRUNCATE_LOW) ||
+            (current[3][nz] <= TRUNCATE_LOW) ||
+            (current[4][nz] <= TRUNCATE_LOW) ||
+            (current[5][nz] <= TRUNCATE_LOW) ||
+            (current[6][nz] <= TRUNCATE_LOW)) {break;}
       }
       int min_nonzero = fmax(0, nz - 5);
 
@@ -214,7 +214,7 @@ void c_modified(
       = fp[b] * convert_from_1 * past1[0][a - 1]         // 0 -> 0
       + fp[a] * p * convert_from_2 * past2[1][a - 1]     // 1 -> 0
       + fp[b] * p2 * convert_from_3 * past3[2][a - 2]    // 2 -> 0
-      + (4 * fp[a] * p3q + p4) * convert_from_4 * past4[3][a - 2] // 3 -> 0
+      + (4 * p3q + p4) * fp[a] * convert_from_4 * past4[3][a - 2] // 3 -> 0
       + fp[b] * p2 * convert_from_3 * past3[4][a - 2]    // 4 -> 0
       + fp[a] * p * convert_from_2 * past2[5][a - 1]     // 5 -> 0
       + fp[b] * p * convert_from_2 * past2[6][a - 1];    // 6 -> 0

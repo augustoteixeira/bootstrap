@@ -47,7 +47,7 @@ plt.legend(["alpha ~ {:.6f}, a ~ {:.6f}".format(coef, -exp(inter))])
 
 ################## B - Estimate a and beta | alpha ########################
 
-truncateB = 7
+truncateB = 4
 
 pinvB = np.divide(1, pp)
 plstB = pls
@@ -69,7 +69,7 @@ plt.legend()
 
 ################## C - Estimate beta and b | alpha, a ########################
 
-truncateC = 9
+truncateC = 5
 
 a = math.pi**2/3
 log_a_minus_pls = np.log(a - pls)
@@ -90,7 +90,7 @@ plt.legend()
 
 ################## D - Estimate b and gamma | alpha, a and beta ########################
 
-truncateD = 7
+truncateD = 6
 
 pls_minus_a = pls - a
 am_over_sqrt = np.divide(pls_minus_a, np.sqrt(pp))
@@ -113,7 +113,7 @@ plt.legend()
 
 ################## E - Estimate b and c | alpha, a, beta, gamme  ########################
 
-truncateE = 9
+truncateE = 5
 
 a = math.pi**2/3
 psixth = np.power(pp, 1/6)
