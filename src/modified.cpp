@@ -4,7 +4,7 @@
 
 //#include "omp.h"
 
-typedef long double real;
+typedef double real;
 
 const real LOG_MULTIPLE = 1.5;
 // this updates a diagonal (s = a + b) with a given past. To be defined below.
@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     clock_t tic = clock(); // for timing purposes
     int m_min = 4; // we let p run from 2^{-m_min}, 2^{-2}, ..., 2^{-m_max} (inclusive).
     int m_max = 12;
-    int m_for_image = 4; // this exponent will be used to build the table and the png image
+    int m_for_image = 10; // this exponent will be used to build the table and the png image
     if (m_max < m_min) { return 1; };
     //if (m_for_image < m_min) { return 1; };
     //if (m_for_image > m_max) { return 1; };
@@ -48,8 +48,11 @@ int main(int argc, char **argv) {
 
     // loop through several values of p
     for (int m = m_min; m <= m_max; m++) {
-      real p = powl(2, -m);
-      int a_max = (int) LOG_MULTIPLE * logl(1 / p) / p;
+      real p = pow(2, -m);
+      //printf("p = %7.6f, log(1/p) = %7.6f, log(1 / p) / p = %7.6f, all = %7.6f\n", p, log(1/p),
+      //       log(1 / p) / p, LOG_MULTIPLE * log(1 / p) / p
+      //       );
+      int a_max = (int) (LOG_MULTIPLE * log(1 / p) / p);
 
       // N0, N1, N2, N3 will rotate to progress on the calculation
       // one will be the current one, being updated and the others will be the
@@ -124,8 +127,8 @@ int main(int argc, char **argv) {
             sum += current[0][l];
           }
           //printf("%Lf, %Lf # m = %d, p = %7.6Lf\n", -logl(p), -p * logl(sum), m, p);
-          printf("p = %7.6Lf, size = %7d, -p * log(diagonal sum) = %7.6Lf, m = %2d\n",
-                 p, a_max,-p * logl(sum), m);
+          printf("p = %7.6f, size = %7d, -p * log(diagonal sum) = %7.6f, m = %2d\n",
+                 p, a_max,-p * log(sum), m);
           //printf("m = %d, N = %d, logl(sum{M(x, N-x)}) = %Lf, -logl(middle) = %Lf\n",
           //       m, a_max, logl(sum), -logl(current[s/2]));
           fflush(stdout);

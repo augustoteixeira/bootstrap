@@ -1,0 +1,27 @@
+Running with f32:
+
+p = 0.0625, size = 66, -p * log(diag sum) = 1.1143446, m = 4, t = 3.685911ms
+p = 0.03125, size = 166, -p * log(diag sum) = 1.4318156, m = 5, t = 33.483944ms
+p = 0.015625, size = 399, -p * log(diag sum) = 1.5526079, m = 6, t = 206.920379ms
+p = 0.0078125, size = 931, -p * log(diag sum) = inf, m = 7, t = 1.066881923s
+p = 0.00390625, size = 2129, -p * log(diag sum) = inf, m = 8, t = 5.485496988s
+p = 0.001953125, size = 4791, -p * log(diag sum) = inf, m = 9, t = 27.053730381s
+
+Running with f64:
+
+p = 0.0625, size = 66, -p * log(diag sum) = 1.1143446061564282, m = 4, t = 4.176269ms
+p = 0.03125, size = 166, -p * log(diag sum) = 1.4318156983740589, m = 5, t = 29.989826ms
+p = 0.015625, size = 399, -p * log(diag sum) = 1.7588088484928874, m = 6, t = 203.385448ms
+p = 0.0078125, size = 931, -p * log(diag sum) = 2.0599962963352603, m = 7, t = 1.093299286s
+p = 0.00390625, size = 2129, -p * log(diag sum) = 2.3202690077818624, m = 8, t = 6.05207972s
+p = 0.001953125, size = 4791, -p * log(diag sum) = inf, m = 9, t = 29.01332482s
+
+Running with logs:
+
+p = exp(-2.7725887), size = 66, -p * log(diag sum) = 1.114344596862793, m = 4, t = 7.476716ms
+p = exp(-3.465736), size = 166, -p * log(diag sum) = 1.4318162202835083, m = 5, t = 55.933988ms
+p = exp(-4.158883), size = 399, -p * log(diag sum) = 1.7588081359863281, m = 6, t = 350.124617ms
+p = exp(-4.8520303), size = 931, -p * log(diag sum) = 2.0599942207336426, m = 7, t = 1.870189172s
+p = exp(-5.5451775), size = 2129, -p * log(diag sum) = 2.320267677307129, m = 8, t = 10.008566153s
+p = exp(-6.2383246), size = 4791, -p * log(diag sum) = 2.536163091659546, m = 9, t = 51.573832055s
+p = exp(-6.931472), size = 10646, -p * log(diag sum) = 2.710359573364258, m = 10, t = 263.243377707s
