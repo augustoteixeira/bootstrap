@@ -42,10 +42,12 @@ def n(log_p, n):
 def f(log_p, n):
     return sub(0.0, sub(0.0, log_p) * n)
 
-m_min = 3
+m_min = 2
+m_max = 7
+
 m_table = 3
 table_size = 5
-m_max = 3
+
 log_multiple = 1.5
 
 #ti.init(arch=ti.gpu, default_fp=ti.f64)
@@ -80,7 +82,7 @@ def modified(p: float, s: int,
             o[6, aa] = zero
         else:
             o[6, aa] = add(q + f(p, b) + p1[6, aa - 1], p + p + p3[3, aa - 2])
-        o[2, aa] = add(add(add(p + f(p, b) + p1[2, aa - 1],
+        o[2, aa] = add(add(add(q + f(p, b) + p1[2, aa - 1],
                   p + q + p2[3, aa - 1]),
                   q + n(p, aa) + o[1, aa]),
                   q + n(p, b) + o[6, aa])
@@ -162,4 +164,4 @@ for m in range(m_min, m_max + 1):
 
 print(table)
 for k in range(0, 7):
-    np.savetxt(f"table_{k:02d}.csv", table[k][:][:], delimiter=",")
+    np.savetxt(f"table_{k}.csv", table[k][:][:], delimiter=",")

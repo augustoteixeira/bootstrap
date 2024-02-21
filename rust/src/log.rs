@@ -93,6 +93,12 @@ impl Log<f64> {
         }
         self.0.exp()
     }
+    pub fn ln_to_float(self) -> f64 {
+        if self.0.is_nan() {
+            panic!("ln with nan for self = {}", self);
+        }
+        self.0 as f64
+    }
 }
 
 impl Default for Log<f64> {

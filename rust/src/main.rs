@@ -43,9 +43,10 @@ fn main() {
     let zero = Real::new(0.0);
     println!("zero = {:}", zero);
     let two = Real::new(2.0);
-    let m_min = 3;
+    let m_min = 2;
+    let m_max = 7;
+
     let m_table = 3;
-    let m_max = 3;
 
     let start = Instant::now();
     for m in m_min..=m_max {
@@ -141,9 +142,9 @@ fn main() {
                 }
                 _ => unreachable!(),
             }
-            for a in 1..s {
-                println!("s = {s}, p1[0, {a}] = {}", past1[(0, a)]);
-            }
+            //for a in 1..s {
+            //    println!("s = {s}, p1[0, {a}] = {}", past1[(0, a)]);
+            //}
             modified(p, s, &mut current, &mut past1, &mut past2, &mut past3);
 
             fill_diagonal(s, current, &mut table);
@@ -181,7 +182,8 @@ fn main() {
                 for k in 0..7 {
                     let array: &Array2<f64> =
                         &(table.index_axis(Axis(0), k).clone().to_owned());
-                    let file = File::create(format!("table{}.csv", k)).unwrap();
+                    let file =
+                        File::create(format!("table_{}.csv", k)).unwrap();
                     let mut writer = WriterBuilder::new()
                         .has_headers(false)
                         .from_writer(file);
@@ -219,7 +221,7 @@ fn modified(
     let q = one - p;
     for a in 1..s {
         let b: i32 = (s - a) as i32;
-        println!("p = {p}, p2[1, {a}-1] = {}, p2[(5, {a} - 1)] = {}, p2[(6, {a} - 1)] = {}), f(p, {b}) = {}, p1[0, {a}-1] = {}", p2[(1, a - 1)], p2[(5, a - 1)], p2[(6, a - 1)], f(p, b), p1[(0, a - 1)]);
+        //println!("p = {p}, p2[1, {a}-1] = {}, p2[(5, {a} - 1)] = {}, p2[(6, {a} - 1)] = {}), f(p, {b}) = {}, p1[0, {a}-1] = {}", p2[(1, a - 1)], p2[(5, a - 1)], p2[(6, a - 1)], f(p, b), p1[(0, a - 1)]);
         o[(0, a)] = p * (p2[(1, a - 1)] + p2[(5, a - 1)] + p2[(6, a - 1)])
             + f(p, b) * p1[(0, a - 1)];
         o[(1, a)] = q * f(p, a as i32) * p1[(1, a)]
@@ -241,6 +243,6 @@ fn modified(
         o[(3, a)] = q * q * f(p, a as i32) * p1[(3, a)]
             + q * n(p, b) * o[(2, a)]
             + q * n(p, b) * o[(4, a)];
-        println!("s = {}, o[0, {}] = {}", s, a, o[(0, a)]);
+        //println!("s = {}, o[0, {}] = {}", s, a, o[(0, a)]);
     }
 }
