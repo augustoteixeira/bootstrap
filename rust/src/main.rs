@@ -1,4 +1,8 @@
+use csv::{ReaderBuilder, WriterBuilder};
 use grid::*;
+use ndarray::{s, Array, Array2, Array3, Axis};
+use ndarray_csv::{Array2Reader, Array2Writer};
+use std::fs::File;
 use std::time::Instant;
 
 mod alg;
@@ -19,15 +23,29 @@ fn f(p: Real, n: i32) -> Real {
     Real::new(1.0) - (Real::new(1.0) - p).powi(n)
 }
 
+const TABLESIZE: usize = 5;
+
+fn fill_diagonal(s: usize, current: &Grid<Real>, table: &mut Array3<f64>) {
+    for k in 0..7 {
+        for j in 1..s {
+            if j < TABLESIZE {
+                if s - j < TABLESIZE {
+                    table[[k, j, s - j]] = current[(k, j)].ln_to_float().exp()
+                }
+            }
+        }
+    }
+}
+
 fn main() {
     let log_multiple: f64 = 1.5;
     println!("0.0.ln() = {}", (0.0 as f32).ln());
     let zero = Real::new(0.0);
     println!("zero = {:}", zero);
     let two = Real::new(2.0);
-    let m_min = 2;
-    //let m_table = 2;
-    let m_max = 2;
+    let m_min = 3;
+    let m_table = 3;
+    let m_max = 3;
 
     let start = Instant::now();
     for m in m_min..=m_max {
@@ -53,6 +71,8 @@ fn main() {
         let mut n1: Grid<Real> = Grid::new(7, a);
         let mut n2: Grid<Real> = Grid::new(7, a);
         let mut n3: Grid<Real> = Grid::new(7, a);
+
+        let mut table = Array3::<f64>::zeros((7, TABLESIZE, TABLESIZE));
 
         let mut current: &mut Grid<Real>;
         let mut past1: &mut Grid<Real>;
@@ -126,6 +146,7 @@ fn main() {
             }
             modified(p, s, &mut current, &mut past1, &mut past2, &mut past3);
 
+            fill_diagonal(s, current, &mut table);
             //     if m == m_table {
             //         for l in 0..tab_w {
             //             let sub: usize = ((s as i64) - (l as i64)) as usize;
@@ -156,6 +177,17 @@ fn main() {
                 );
             }
 
+            {
+                for k in 0..7 {
+                    let array: &Array2<f64> =
+                        &(table.index_axis(Axis(0), k).clone().to_owned());
+                    let file = File::create(format!("table{}.csv", k)).unwrap();
+                    let mut writer = WriterBuilder::new()
+                        .has_headers(false)
+                        .from_writer(file);
+                    writer.serialize_array2(array).unwrap();
+                }
+            }
             // if m == m_table {
             //     // print table
             //     for b in (0..tab_h).rev() {

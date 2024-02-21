@@ -1,4 +1,5 @@
 import taichi as ti
+import numpy as np
 import taichi.math as tm
 import math
 
@@ -41,11 +42,14 @@ def n(log_p, n):
 def f(log_p, n):
     return sub(0.0, sub(0.0, log_p) * n)
 
-m_min = 4
-m_max = 22
+m_min = 3
+m_table = 3
+table_size = 5
+m_max = 3
 log_multiple = 1.5
 
-ti.init(arch=ti.gpu, default_fp=ti.f64)
+#ti.init(arch=ti.gpu, default_fp=ti.f64)
+ti.init(arch=ti.cpu, default_fp=ti.f64)
 
 @ti.kernel
 def init(log_p: float, n2: ti.template()):
@@ -88,9 +92,17 @@ def modified(p: float, s: int,
                   q + n(p, b) + o[4, aa])
         #print(f"s = {s}, o[0, {aa}] = {o[0, aa]}")
 
+def fill_diagonal(s, current, table):
+    for k in range(0, 7):
+        for j in range(1, s):
+            if j < table_size:
+                if s - j < table_size:
+                    table[k][j][s - j] = math.exp(current[k, j])
+
 for m in range(m_min, m_max + 1):
     p_float = 2**(-m)
     a = math.floor(log_multiple * math.log(1.0 / p_float) / p_float)
+
     #print(f"a = {a}")
 
     log_p =  tm.log(p_float)
@@ -99,6 +111,8 @@ for m in range(m_min, m_max + 1):
     n1 = ti.field(ti.f64)
     n2 = ti.field(ti.f64)
     n3 = ti.field(ti.f64)
+
+    table = np.zeros((7, table_size, table_size))
 
     ti.root.dense(ti.i, 7).dense(ti.j, a).place(n0)
     ti.root.dense(ti.i, 7).dense(ti.j, a).place(n1)
@@ -113,27 +127,39 @@ for m in range(m_min, m_max + 1):
     init(log_p, n2)
 
     for s in range(3, a):
-        match s % 4:
-            case 0:
-                #for i in range(1, s):
-                #    print(f"0 s = {s}, s%3 = {s%3}, p1[0, {i}] = {n3[0, i]}")
-                modified(log_p, s, n0, n3, n2, n1)
-            case 1:
-                #for i in range(1, s):
-                #    print(f"1 s = {s}, p1[0, {i}] = {n0[0, i]}")
-                modified(log_p, s, n1, n0, n3, n2)
-            case 2:
-                #for i in range(1, s):
-                #    print(f"2 s = {s}, p1[0, {i}] = {n1[0, i]}")
-                modified(log_p, s, n2, n1, n0, n3)
-            case 3:
-                #for i in range(1, s):
-                #    print(f"3 s = {s}, p1[0, {i}] = {n2[0, i]}")
-                modified(log_p, s, n3, n2, n1, n0)
+        if s % 4 == 0:
+            #for i in range(1, s):
+            #    print(f"0 s = {s}, s%3 = {s%3}, p1[0, {i}] = {n3[0, i]}")
+            modified(log_p, s, n0, n3, n2, n1)
+            if m == m_table:
+                fill_diagonal(s, n0, table)
+        if s % 4 == 1:
+            #for i in range(1, s):
+            #    print(f"1 s = {s}, p1[0, {i}] = {n0[0, i]}")
+            modified(log_p, s, n1, n0, n3, n2)
+            if m == m_table:
+                fill_diagonal(s, n1, table)
+        if s % 4 == 2:
+            #for i in range(1, s):
+            #    print(f"2 s = {s}, p1[0, {i}] = {n1[0, i]}")
+            modified(log_p, s, n2, n1, n0, n3)
+            if m == m_table:
+                fill_diagonal(s, n2, table)
+        if s % 4 == 3:
+            #for i in range(1, s):
+            #    print(f"3 s = {s}, p1[0, {i}] = {n2[0, i]}")
+            modified(log_p, s, n3, n2, n1, n0)
+            if m == m_table:
+                fill_diagonal(s, n3, table)
 
     acc = -math.inf
     for l in range(a):
         acc = add_py(acc, n0[0, l])
+    print(f"p = {p_float}, size = {a}, -p log(s) = {-p_float * acc}, m = {m}")
     file = open(f'result_{m:02d}.txt', 'w')
     file.write(f"p = {p_float}, size = {a}, -p log(s) = {-p_float * acc}, m = {m}\n")
     file.close()
+
+print(table)
+for k in range(0, 7):
+    np.savetxt(f"table_{k:02d}.csv", table[k][:][:], delimiter=",")

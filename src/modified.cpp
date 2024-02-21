@@ -20,9 +20,9 @@ real normalize(real v) { return fmaxl(logl(v), -200); }
 int main(int argc, char **argv) {
   {
     clock_t tic = clock(); // for timing purposes
-    int m_min = 4; // we let p run from 2^{-m_min}, 2^{-2}, ..., 2^{-m_max} (inclusive).
-    int m_max = 12;
-    int m_for_image = 10; // this exponent will be used to build the table and the png image
+    int m_min = 3; // we let p run from 2^{-m_min}, 2^{-2}, ..., 2^{-m_max} (inclusive).
+    int m_max = 3;
+    int m_for_image = 3; // this exponent will be used to build the table and the png image
     if (m_max < m_min) { return 1; };
     //if (m_for_image < m_min) { return 1; };
     //if (m_for_image > m_max) { return 1; };
