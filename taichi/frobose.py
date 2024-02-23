@@ -43,9 +43,9 @@ def f(log_p, n):
     return sub(0.0, sub(0.0, log_p) * n)
 
 m_min = 2
-m_max = 7
+m_max = 13
 
-m_table = 3
+m_table = 2
 table_size = 5
 
 log_multiple = 1.5
@@ -156,12 +156,20 @@ for m in range(m_min, m_max + 1):
 
     acc = -math.inf
     for l in range(a):
-        acc = add_py(acc, n0[0, l])
+        if s % 4 == 0:
+            acc = add_py(acc, n0[0, l])
+        if s % 4 == 1:
+            acc = add_py(acc, n1[0, l])
+        if s % 4 == 2:
+            acc = add_py(acc, n2[0, l])
+        if s % 4 == 3:
+            acc = add_py(acc, n3[0, l])
+
     print(f"p = {p_float}, size = {a}, -p log(s) = {-p_float * acc}, m = {m}")
     file = open(f'result_{m:02d}.txt', 'w')
     file.write(f"p = {p_float}, size = {a}, -p log(s) = {-p_float * acc}, m = {m}\n")
     file.close()
 
-print(table)
+#print(table)
 for k in range(0, 7):
     np.savetxt(f"table_{k}.csv", table[k][:][:], delimiter=",")

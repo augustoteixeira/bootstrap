@@ -13,7 +13,7 @@ mod log;
 //type Real = Alg<f64>;
 
 use log::*;
-type Real = Log<f32>;
+type Real = Log<f64>;
 
 fn n(p: Real, n: i32) -> Real {
     (Real::new(1.0) - p).powi(n)
@@ -30,6 +30,10 @@ fn fill_diagonal(s: usize, current: &Grid<Real>, table: &mut Array3<f64>) {
         for j in 1..s {
             if j < TABLESIZE {
                 if s - j < TABLESIZE {
+                    if current[(k, j)].0.is_nan() {
+                        println!("k = {k}, j = {j}, s = {s}");
+                        panic!("AHHH")
+                    }
                     table[[k, j, s - j]] = current[(k, j)].ln_to_float().exp()
                 }
             }
@@ -44,9 +48,9 @@ fn main() {
     println!("zero = {:}", zero);
     let two = Real::new(2.0);
     let m_min = 2;
-    let m_max = 7;
+    let m_max = 13;
 
-    let m_table = 3;
+    let m_table = 2;
 
     let start = Instant::now();
     for m in m_min..=m_max {
@@ -147,7 +151,9 @@ fn main() {
             //}
             modified(p, s, &mut current, &mut past1, &mut past2, &mut past3);
 
-            fill_diagonal(s, current, &mut table);
+            if m == m_table {
+                fill_diagonal(s, current, &mut table);
+            }
             //     if m == m_table {
             //         for l in 0..tab_w {
             //             let sub: usize = ((s as i64) - (l as i64)) as usize;

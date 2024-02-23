@@ -79,25 +79,34 @@ impl Sub for Log<f32> {
 #[allow(dead_code)]
 impl Log<f64> {
     pub fn new(v: f32) -> Self {
+        if v.ln().is_nan() {
+            panic!("new with nan for v = {}", v);
+        }
         Log((v as f64).ln())
     }
     pub fn powi(self, n: i32) -> Self {
+        if (self.0 * (n as f64)).is_nan() {
+            panic!("powi with nan for self = {}, n = {}", self, n);
+        }
         Log::<f64>(self.0 * (n as f64))
     }
     pub fn ln(self) -> Self {
-        Log::<f64>(self.0.ln())
-    }
-    pub fn to_float(self) -> f64 {
-        if self.0.abs() > 40.0 {
-            panic!("Calculating f64 exp of too large a value: {}!", self.0);
+        if self.0.is_nan() {
+            panic!("ln with nan for self = {}", self);
         }
-        self.0.exp()
+        Log::<f64>(self.0.ln())
     }
     pub fn ln_to_float(self) -> f64 {
         if self.0.is_nan() {
             panic!("ln with nan for self = {}", self);
         }
         self.0 as f64
+    }
+    pub fn to_float(self) -> f64 {
+        if self.0.abs() > 20.0 {
+            panic!("Calculating f64 exp of too large a value: {}!", self.0);
+        }
+        self.0.exp()
     }
 }
 
@@ -110,9 +119,16 @@ impl Default for Log<f64> {
 impl Add for Log<f64> {
     type Output = Self;
     fn add(self, other: Self) -> Self {
+        if self.0.is_infinite() & other.0.is_infinite() {
+            return Default::default();
+        }
         let max = self.0.max(other.0);
         let min = self.0.min(other.0);
-        Self(max + (1.0 + (min - max).exp()).ln())
+        let r = max + (1.0 + (min - max).exp()).ln();
+        if r.is_nan() {
+            panic!("nan when add({:}, {:})", self, other)
+        }
+        Self(r)
     }
 }
 
