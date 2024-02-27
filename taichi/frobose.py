@@ -156,14 +156,16 @@ for m in range(m_min, m_max + 1):
 
     acc = -math.inf
     for l in range(a):
-        if s % 4 == 0:
-            acc = add_py(acc, n0[0, l])
-        if s % 4 == 1:
-            acc = add_py(acc, n1[0, l])
-        if s % 4 == 2:
-            acc = add_py(acc, n2[0, l])
-        if s % 4 == 3:
-            acc = add_py(acc, n3[0, l])
+        # for k in range(7):
+            k = 0
+            if s % 4 == 0:
+                acc = add_py(acc, n0[k, l])
+            if s % 4 == 1:
+                acc = add_py(acc, n1[k, l])
+            if s % 4 == 2:
+                acc = add_py(acc, n2[k, l])
+            if s % 4 == 3:
+                acc = add_py(acc, n3[k, l])
 
     print(f"p = {p_float}, size = {a}, -p log(s) = {-p_float * acc}, m = {m}")
     file = open(f'result_{m:02d}.txt', 'w')
