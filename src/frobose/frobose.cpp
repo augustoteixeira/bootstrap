@@ -17,14 +17,36 @@ real f(real p, int k) { return 1 - powf(1 - p, k); }
 // there is no infection in these k points
 real n(real p, int k) { return powf(1 - p, k); }
 
+const int TABLESIZE = 5;
+
+void fill_table_diag(int s, int a_max, void *current, float table[], float log_normalizer) {
+  real (*cur)[a_max] = static_cast<real (*)[a_max]>(current);
+  for (int k = 0; k < 7; k++) {
+    for (int j = 1; j < s; j ++) {
+      if (j < TABLESIZE) {
+        if (s - j < TABLESIZE) {
+          table[k * TABLESIZE * TABLESIZE + j * TABLESIZE + s - j] = expf(log_normalizer) * cur[k][j];
+        }
+      }
+    }
+  }
+}
+
 int main(int argc, char **argv) {
   clock_t tic = clock(); // for timing purposes
   int m_min = 2; // we let p run from 2^{-m_min}, 2^{-2}, ..., 2^{-m_max} (inclusive).
-  int m_max = 17;
+  int m_max = 2;
+  int m_table = 2;
   if (m_max < m_min) { return 1; };
 
   FILE *fpt;
   fpt = fopen("report.csv", "w+");
+
+  // allocate table
+  float table[TABLESIZE * TABLESIZE * 7];
+  for (int j = 0; j < TABLESIZE * TABLESIZE * 7; j++) {
+    table[j] = 0.0;
+  }
 
   // loop through several values of p
   for (int m = m_min; m <= m_max; m++) {
@@ -71,6 +93,8 @@ int main(int argc, char **argv) {
     N2[6][1] = 0;
 
     int min_nonzero = 0;
+    current = N2;
+    fill_table_diag(2, a_max, *current, table, 0);
 
     // we now set log_normalize[3]
     log_normalizer[3] = logf(N2[0][1]);
@@ -101,6 +125,10 @@ int main(int argc, char **argv) {
                  log_normalizer[s], log_normalizer[s - 1], log_normalizer[s - 2],
                  log_normalizer[s - 3], log_normalizer[s - 4], log_normalizer + (s + 1));
 
+      if (m == m_table){
+        fill_table_diag(s, a_max, *current, table, log_normalizer[s]);
+      }
+
       int nz = fmax(0, min_nonzero - 5);
       for (; nz < a_max; nz++) {
         if ((current[0][nz] != 0) ||
@@ -127,6 +155,18 @@ int main(int argc, char **argv) {
                -logf(p), -p * (logf(sum) + log_normalizer[s]), m, p, a_max, min_nonzero, (float)(clock() - tic)/CLOCKS_PER_SEC);
         fflush(stdout);
         fprintf(fpt, "%d, %14.7f\n", m, -p * (logf(sum) + log_normalizer[s]));
+
+        if (m == m_table) {
+          for (int k = 0; k < 7; k++) {
+            printf("table %d\n", k);
+            for (int j = 0; j < TABLESIZE; j++) {
+              for (int i = 0; i < TABLESIZE; i++) {
+                printf("%7.6f, ", table[k * TABLESIZE * TABLESIZE + j * TABLESIZE + i]);
+              }
+              printf("\n");
+            }
+          }
+        }
       }
     }
     free(N0);
@@ -269,7 +309,7 @@ void c_modified(
   }
   for (int a = min_nonzero; a < s; a++) {
     int b = s - a;
-    output[3][a]
+    output[3][a] =
       + np[b] * output[2][a]                              // 2 -> 3
       + fp[a] * q2 * convert_from_1 * past1[3][a]         // 3 -> 3
       + np[b] * output[4][a];                             // 4 -> 3
