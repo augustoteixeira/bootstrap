@@ -5,7 +5,7 @@
 // #include "omp.h"
 
 // on my machine, reals are 16 bytes long, which is twice as much as double
-typedef float real;
+typedef double real;
 
 const real LOG_MULTIPLE = 1.5;
 // this updates a diagonal (s = a + b) with a given past. To be defined below.
@@ -18,6 +18,7 @@ real f(real p, int k) { return 1 - powf(1 - p, k); }
 real n(real p, int k) { return powf(1 - p, k); }
 
 const int TABLESIZE = 5;
+const bool do_table = false;
 
 void fill_table_diag(int s, int a_max, void *current, float table[], float log_normalizer) {
   real (*cur)[a_max] = static_cast<real (*)[a_max]>(current);
@@ -35,7 +36,7 @@ void fill_table_diag(int s, int a_max, void *current, float table[], float log_n
 int main(int argc, char **argv) {
   clock_t tic = clock(); // for timing purposes
   int m_min = 2; // we let p run from 2^{-m_min}, 2^{-2}, ..., 2^{-m_max} (inclusive).
-  int m_max = 2;
+  int m_max = 13;
   int m_table = 2;
   if (m_max < m_min) { return 1; };
 
@@ -94,7 +95,9 @@ int main(int argc, char **argv) {
 
     int min_nonzero = 0;
     current = N2;
-    fill_table_diag(2, a_max, *current, table, 0);
+    if (do_table) {
+      fill_table_diag(2, a_max, *current, table, 0);
+    }
 
     // we now set log_normalize[3]
     log_normalizer[3] = logf(N2[0][1]);
@@ -125,8 +128,10 @@ int main(int argc, char **argv) {
                  log_normalizer[s], log_normalizer[s - 1], log_normalizer[s - 2],
                  log_normalizer[s - 3], log_normalizer[s - 4], log_normalizer + (s + 1));
 
-      if (m == m_table){
-        fill_table_diag(s, a_max, *current, table, log_normalizer[s]);
+      if (m == m_table) {
+        if (do_table) {
+          fill_table_diag(s, a_max, *current, table, log_normalizer[s]);
+        }
       }
 
       int nz = fmax(0, min_nonzero - 5);
@@ -156,14 +161,16 @@ int main(int argc, char **argv) {
         fflush(stdout);
         fprintf(fpt, "%d, %14.7f\n", m, -p * (logf(sum) + log_normalizer[s]));
 
-        if (m == m_table) {
-          for (int k = 0; k < 7; k++) {
-            printf("table %d\n", k);
-            for (int j = 0; j < TABLESIZE; j++) {
-              for (int i = 0; i < TABLESIZE; i++) {
-                printf("%7.6f, ", table[k * TABLESIZE * TABLESIZE + j * TABLESIZE + i]);
+        if (do_table) {
+          if (m == m_table) {
+            for (int k = 0; k < 7; k++) {
+              printf("table %d\n", k);
+              for (int j = 0; j < TABLESIZE; j++) {
+                for (int i = 0; i < TABLESIZE; i++) {
+                  printf("%7.6f, ", table[k * TABLESIZE * TABLESIZE + j * TABLESIZE + i]);
+                }
+                printf("\n");
               }
-              printf("\n");
             }
           }
         }

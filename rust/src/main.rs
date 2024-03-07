@@ -45,9 +45,9 @@ fn main() {
     let zero = Real::new(0.0);
     let two = Real::new(2.0);
     let m_min = 2;
-    let m_max = 2;
+    let m_max = 13;
     let m_table = 2; // used to build the tables
-    let store_table = true;
+    let store_table = false;
 
     let start = Instant::now(); // for timing the execution
     for m in m_min..=m_max {
