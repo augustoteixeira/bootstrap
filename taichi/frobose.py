@@ -91,7 +91,7 @@ def frobose(p: float, s: int,
         if a >= 3:
             o[0, aa] = add(o[0, aa],
                            add(f(p, b) + p2 + past3[2, aa - 2],
-                               add(four + add(p3q, p4) + f(p, aa) + past4[3, aa - 2],
+                               add(add(four + p3q, p4) + f(p, aa) + past4[3, aa - 2],
                                    f(p, b) + p2 + past3[4, aa - 2])))
         o[1, aa] = add(n(p, b) + o[0, aa],
                        add(f(p, aa) + q + past1[1, a],
@@ -151,6 +151,7 @@ for m in range(m_min, m_max + 1):
     n4.fill(-math.inf)
 
     init(log_p, n2)
+    fill_diagonal(2, n2, table)
 
     for s in range(3, a):
         if s % 5 == 0:
