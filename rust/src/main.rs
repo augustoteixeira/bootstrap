@@ -45,7 +45,7 @@ fn main() {
     let zero = Real::new(0.0);
     let two = Real::new(2.0);
     let m_min = 2;
-    let m_max = 2;
+    let m_max = 10;
     let m_table = 2; // used to build the tables
     let store_table = true;
 
