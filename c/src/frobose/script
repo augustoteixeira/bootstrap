@@ -1,10 +1,4 @@
-if [ $# -eq 0 ]
-  then
-    echo "No arguments supplied"
-    exit 1
-fi
-
-if g++ -O3 -o a.out ${1}.cpp -lm; then
+if g++ -O3 -o a.out frobose.cpp -lm; then
   echo "Compilation succeeded"
 else
   echo "Compilation failed"

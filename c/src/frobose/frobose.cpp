@@ -2,14 +2,13 @@
 #include <time.h>
 #include <math.h>
 
-// #include "omp.h"
-
-// on my machine, reals are 16 bytes long, which is twice as much as double
+// typically, reals are 16 bytes long, which is twice as much as double
 typedef double real;
 
 const real LOG_MULTIPLE = 1.5;
+
 // this updates a diagonal (s = a + b) with a given past. To be defined below.
-void c_modified(int min_nonzero, real p, int s, void*, void*, void*, void*, void*,
+void c_frobose(int min_nonzero, real p, int s, void*, void*, void*, void*, void*,
                 int, real, real, real, real, real, real*);
 
 // there exists an infection among k fixed points
@@ -124,7 +123,7 @@ int main(int argc, char **argv) {
       }
 
       // fill the current array with an auxiliary function (implemented below)
-      c_modified(min_nonzero, p, s, current, past1, past2, past3, past4, a_max,
+      c_frobose(min_nonzero, p, s, current, past1, past2, past3, past4, a_max,
                  log_normalizer[s], log_normalizer[s - 1], log_normalizer[s - 2],
                  log_normalizer[s - 3], log_normalizer[s - 4], log_normalizer + (s + 1));
 
@@ -134,6 +133,7 @@ int main(int argc, char **argv) {
         }
       }
 
+      // finding the support of current in order to reduce size of computations
       int nz = fmax(0, min_nonzero - 5);
       for (; nz < a_max; nz++) {
         if ((current[0][nz] != 0) ||
@@ -181,26 +181,14 @@ int main(int argc, char **argv) {
     free(N2);
     free(N3);
     free(N4);
-    //delete [] log_normalizer;
   }
   printf("Elapsed in c_30: %f secs\n\n", (real)(clock() - tic)/CLOCKS_PER_SEC);
   fclose(fpt);
   return 0;
 }
 
-void update6(real* fp, real p, int s, real p2q2, real* output6, real convert_from_3,
-             real* past33, real q, real convert_from_1, real* past16) {
-  for (int a = 1; a < s; a++) {
-    int b = s - a;
-    output6[a]
-      = fp[a] * p2q2 * convert_from_3 * past33[a - 2]   // 3 -> 6
-      + fp[b] * q * convert_from_1 * past16[a - 1];     // 6 -> 6
-    // trim small values
-    if (output6[a] < 0.0000001) { output6[a] = 0.0; }
-  }
-}
 
-void c_modified(
+void c_frobose(
   int min_nonzero,
   real p,
   int s,
@@ -249,7 +237,6 @@ void c_modified(
   }
 
   // order 0, 1, 6, 5, 4, 2, 3
-  // pragma omp parallel for
   for (int a = min_nonzero; a < s; a++) {
     int b = s - a;
     output[0][a]
@@ -276,8 +263,6 @@ void c_modified(
     // trim small values
     if (output[1][a] < 0.0000001) { output[1][a] = 0.0; }
   }
-  //update6(fp, p, s, p2q2, &output[6][0], convert_from_3,
-  //        &past3[3][0], q, convert_from_1, &past1[6][0]);
   for (int a = min_nonzero; a < s; a++) {
     int b = s - a;
     output[6][a]
