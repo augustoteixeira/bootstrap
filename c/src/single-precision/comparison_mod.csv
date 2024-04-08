@@ -1,4 +1,0 @@
-double:  log_norm = -3014.271, log(sum) =    6.239, log(p) = 6.931472, -p log(sum) = 2.937531 # m = 10, p = 0.000977, a = 10646, time = 7.153383
-float :  log_norm = -2996.542, log(sum) =    6.239, log(p) = 6.931472, -p log(sum) = 2.920218 # m = 10, p = 0.000977, a = 10646, time = 7.153389
-Elapsed in c_30: 7.153397 secs
-

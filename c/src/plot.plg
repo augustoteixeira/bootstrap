@@ -1,4 +1,0 @@
-set title 'p against -p log(sum_i M0(i, N - i))'
-
-plot 'test.csv'
-pause -1
