@@ -2,6 +2,7 @@ import taichi as ti
 import numpy as np
 import taichi.math as tm
 import math
+import time
 
 @ti.func
 def sub(a, b):
@@ -42,16 +43,18 @@ def n(log_p, n):
 def f(log_p, n):
     return sub(0.0, sub(0.0, log_p) * n)
 
-m_min = 7
-m_max = 10
+m_min = 14
+m_max = 23
 
 m_table = 2
 table_size = 5
 
-log_multiple = 1.5
+log_multiple = 2.0
 
-#ti.init(arch=ti.gpu, default_fp=ti.f64)
-ti.init(arch=ti.cpu, default_fp=ti.f64)
+restrict_support = True
+
+ti.init(arch=ti.gpu, default_fp=ti.f64)
+#ti.init(arch=ti.cpu, default_fp=ti.f64)
 
 @ti.kernel
 def init(log_p: float, n2: ti.template()):
@@ -66,7 +69,9 @@ def frobose(p: float, s: int,
              past1: ti.template(),
              past2: ti.template(),
              past3: ti.template(),
-             past4: ti.template()):
+             past4: ti.template(),
+             supp_lo: int,
+             supp_hi: int):
     zero = -math.inf
     one = 0.0
     four = tm.log(4.0)
@@ -79,7 +84,7 @@ def frobose(p: float, s: int,
     p2q2 = p + p + q + q
     p3q = p + p + p + q
     p4 = p + p + p + p
-    for aa in range(1, s):
+    for aa in range(supp_lo, supp_hi):
         b = s - aa
         #print(f"{p}, {s}: past2[1, {aa} - 1]={past2[1, aa - 1]}, past2[5, {aa} - 1]={past2[5, aa - 1]},past2[6, {aa} - 1]={past2[6, aa - 1]},f(p, {b})={f(p, b)},past1[0, {aa} - 1]={past1[0, aa - 1]}")
         o[0, aa] = add(f(p, b) + past1[0, aa - 1],
@@ -119,7 +124,30 @@ def fill_diagonal(s, current, table):
                 if s - j < table_size:
                     table[k][j][s - j] = math.exp(current[k, j])
 
+def clip(x, lo, hi):
+    return min(max(x, lo), hi)
+
+def update_supp(old_lo, old_hi, s, current):
+    if not restrict_support:
+        return 1, s
+    res_lo = 1
+    res_hi = s
+    for lo in range(old_lo - 20, old_lo + 20):
+        if lo >=0:
+            if lo < s:
+                if not math.isinf(current[0, lo]):
+                    res_lo = lo
+                    break
+    for hi in range(old_hi + 20, old_lo - 20, -1):
+        if hi >=0:
+            if hi < s:
+                if not math.isinf(current[0, hi]):
+                    res_hi = hi
+                    break
+    return clip(res_lo - 20, 1, s), clip(res_hi + 20, 1, s)
+
 for m in range(m_min, m_max + 1):
+    start_time = time.time()
     p_float = 2**(-m)
     a = math.floor(log_multiple * math.log(1.0 / p_float) / p_float)
 
@@ -146,37 +174,35 @@ for m in range(m_min, m_max + 1):
     n4.fill(-math.inf)
 
     init(log_p, n2)
-    fill_diagonal(2, n2, table)
+    if m == m_table:
+        fill_diagonal(2, n2, table)
 
+    supp_lo = 1
+    supp_hi = 3
     for s in range(3, a):
         if s % 5 == 0:
-            #for i in range(1, s):
-            #    print(f"0 s = {s}, s%3 = {s%3}, p1[0, {i}] = {n3[0, i]}")
-            frobose(log_p, s, n0, n4, n3, n2, n1)
+            supp_lo, supp_hi = update_supp(supp_lo, supp_hi, s, n0)
+            frobose(log_p, s, n0, n4, n3, n2, n1, supp_lo, supp_hi)
             if m == m_table:
                 fill_diagonal(s, n0, table)
         if s % 5 == 1:
-            #for i in range(1, s):
-            #    print(f"1 s = {s}, p1[0, {i}] = {n0[0, i]}")
-            frobose(log_p, s, n1, n0, n4, n3, n2)
+            supp_lo, supp_hi = update_supp(supp_lo, supp_hi, s, n1)
+            frobose(log_p, s, n1, n0, n4, n3, n2, supp_lo, supp_hi)
             if m == m_table:
                 fill_diagonal(s, n1, table)
         if s % 5 == 2:
-            #for i in range(1, s):
-            #    print(f"2 s = {s}, p1[0, {i}] = {n1[0, i]}")
-            frobose(log_p, s, n2, n1, n0, n4, n3)
+            supp_lo, supp_hi = update_supp(supp_lo, supp_hi, s, n2)
+            frobose(log_p, s, n2, n1, n0, n4, n3, supp_lo, supp_hi)
             if m == m_table:
                 fill_diagonal(s, n2, table)
         if s % 5 == 3:
-            #for i in range(1, s):
-            #    print(f"3 s = {s}, p1[0, {i}] = {n2[0, i]}")
-            frobose(log_p, s, n3, n2, n1, n0, n4)
+            supp_lo, supp_hi = update_supp(supp_lo, supp_hi, s, n3)
+            frobose(log_p, s, n3, n2, n1, n0, n4, supp_lo, supp_hi)
             if m == m_table:
                 fill_diagonal(s, n3, table)
         if s % 5 == 4:
-            #for i in range(1, s):
-            #    print(f"3 s = {s}, p1[0, {i}] = {n2[0, i]}")
-            frobose(log_p, s, n4, n3, n2, n1, n0)
+            supp_lo, supp_hi = update_supp(supp_lo, supp_hi, s, n4)
+            frobose(log_p, s, n4, n3, n2, n1, n0, supp_lo, supp_hi)
             if m == m_table:
                 fill_diagonal(s, n4, table)
 
@@ -196,7 +222,8 @@ for m in range(m_min, m_max + 1):
             if s % 5 == 4:
                 acc = add_py(acc, n4[k, l])
 
-    print(f"p = {p_float}, size = {a}, -p log(s) = {-p_float * acc}, m = {m}")
+    print(f"p = {p_float}, size = {a}, -p log(s) = {-p_float * acc}, m = {m}, "
+          + f"t = {time.time() - start_time}")
     file = open(f'result_{m:02d}.txt', 'w')
     file.write(f"p = {p_float}, size = {a}, -p log(s) = {-p_float * acc}, m = {m}\n")
     file.close()
