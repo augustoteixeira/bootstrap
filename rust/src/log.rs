@@ -47,7 +47,6 @@ impl Add for Log<f32> {
         }
         let max = self.0.max(other.0);
         let min = self.0.min(other.0);
-        //Self(max + (1.0 + (min - max).exp()).ln());
 
         let r = max + (1.0 + (min - max).exp()).ln();
         if r.is_nan() {
@@ -140,12 +139,6 @@ impl Sub for Log<f64> {
         Self(max + (1.0 - (min - max).exp()).ln())
     }
 }
-
-// impl<T> Default for Log<T> {
-//     fn default() -> Self {
-//         Log::<T>::new(std::f32::NEG_INFINITY)
-//     }
-// }
 
 impl<T: core::fmt::Display> fmt::Display for Log<T> {
     // This trait requires `fmt` with this exact signature.

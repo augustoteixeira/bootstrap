@@ -9,8 +9,13 @@ This repository includes three implementations of modified and Froböse Bootstra
 
 # rust
 
+To execute:
+
     cargo run
-    
+
+In order to change the way to store the floating points, look at the first comments in `main.rs`.
+This is also the right file to alter sizes and parameters.
+
 # c
 
 Uses simple floating points, reducing precision and limiting size of simulation.

@@ -1,3 +1,5 @@
+rust/analysis/*
+
 # jupyter
 jupyter/.ipynb_checkpoints/*
 *.ipynb
