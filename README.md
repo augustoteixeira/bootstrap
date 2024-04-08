@@ -2,10 +2,12 @@
 
 This repository includes three implementations of modified and Froböse Bootstrap percolation using a new algorithm developed by Hartarsky and Teixeira.
 
-# python
+# taichi
 
-    sudo apt install python3-sklearn
-    sudo apt install python3-notebook
+This is the fastest code, as it runs on the GPU (needs drivers to be installed, tested with CUDA).
+
+Install the `requirements.txt` and execute either `modified.py` or `frobose.py`.
+If no GPU is found, it falls back to CPU.
 
 # rust
 

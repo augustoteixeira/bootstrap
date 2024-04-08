@@ -86,7 +86,6 @@ def frobose(p: float, s: int,
     p4 = p + p + p + p
     for aa in range(supp_lo, supp_hi):
         b = s - aa
-        #print(f"{p}, {s}: past2[1, {aa} - 1]={past2[1, aa - 1]}, past2[5, {aa} - 1]={past2[5, aa - 1]},past2[6, {aa} - 1]={past2[6, aa - 1]},f(p, {b})={f(p, b)},past1[0, {aa} - 1]={past1[0, aa - 1]}")
         o[0, aa] = add(f(p, b) + past1[0, aa - 1],
                        add(f(p, aa) + p + past2[1, aa - 1],
                            add(f(p, aa) + p + past2[5, aa - 1],
