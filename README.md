@@ -27,3 +27,7 @@ This code does not scale to very small values of `p`.
 In `c/src/frobose/` run `script`.
 
 Parameters can be modified in the source code.
+
+# plotting and fitting
+
+Two simple Python scripts have been added to aid in this: `4fit.py` and `plotting.py`.
