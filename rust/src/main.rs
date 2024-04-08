@@ -41,11 +41,11 @@ fn fill_table_diag(s: usize, current: &Grid<Real>, table: &mut Array3<f64>) {
 }
 
 fn main() {
-    let log_multiple: f64 = 1.5;
+    let log_multiple: f64 = 2.0;
     let zero = Real::new(0.0);
     let two = Real::new(2.0);
     let m_min = 2;
-    let m_max = 10;
+    let m_max = 6;
     let m_table = 2; // used to build the tables
     let store_table = true;
 
