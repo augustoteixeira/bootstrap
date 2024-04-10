@@ -1,9 +1,0 @@
-log_norm =    -4.421, log(sum) =    0.629, log(p) = 1.386294, -p log(sum) = 0.948026 # m = 2, p = 0.250000, a = 8, nz = 0, time = 0.000068
-log_norm =   -12.550, log(sum) =    1.497, log(p) = 2.079442, -p log(sum) = 1.381649 # m = 3, p = 0.125000, a = 24, nz = 0, time = 0.000098
-log_norm =   -31.081, log(sum) =    2.307, log(p) = 2.772589, -p log(sum) = 1.798369 # m = 4, p = 0.062500, a = 66, nz = 0, time = 0.000171
-log_norm =   -70.842, log(sum) =    3.073, log(p) = 3.465736, -p log(sum) = 2.117765 # m = 5, p = 0.031250, a = 166, nz = 0, time = 0.000562
-log_norm =  -137.538, log(sum) =    3.859, log(p) = 4.158883, -p log(sum) = 2.088732 # m = 6, p = 0.015625, a = 399, nz = 0, time = 0.002429
-log_norm =  -237.625, log(sum) =    4.171, log(p) = 4.852030, -p log(sum) = 1.823862 # m = 7, p = 0.007812, a = 931, nz = 0, time = 0.011837
-log_norm =  -467.733, log(sum) =    4.737, log(p) = 5.545177, -p log(sum) = 1.808576 # m = 8, p = 0.003906, a = 2129, nz = 0, time = 0.060504
-log_norm = -1446.062, log(sum) =    5.587, log(p) = 6.238325, -p log(sum) = 2.813428 # m = 9, p = 0.001953, a = 4791, nz = 1833, time = 0.313001
-# Elapsed Time: 1 seconds
