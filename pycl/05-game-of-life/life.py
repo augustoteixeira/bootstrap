@@ -29,7 +29,7 @@ __kernel void game_of_life(__global const int *current_grid, __global int *next_
 
     int current_state = current_grid[idx];
     int next_state = 0;
-    
+
     if (current_state == 1 && (num_neighbors == 2 || num_neighbors == 3)) {
         next_state = 1;
     } else if (current_state == 0 && num_neighbors == 3) {
@@ -65,10 +65,10 @@ num_iterations = 100
 for iteration in range(num_iterations):
     # Execute the kernel
     program.game_of_life(queue, global_size, None, current_grid_buf, next_grid_buf, np.int32(WIDTH), np.int32(HEIGHT))
-    
+
     # Read the result back to host
     cl.enqueue_copy(queue, next_grid, next_grid_buf).wait()
-    
+
     # Swap buffers
     current_grid, next_grid = next_grid, current_grid
     current_grid_buf, next_grid_buf = next_grid_buf, current_grid_buf
