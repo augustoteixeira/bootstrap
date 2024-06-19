@@ -3,14 +3,18 @@ import numpy as np
 import math
 import time
 
+from dotenv import load_dotenv, dotenv_values
+# loading variables from .env file
+load_dotenv()
+
 def sub(a, b):
     ans = 0.0
-    if tm.isinf(a) and tm.isinf(b):
+    if math.isinf(a) and math.isinf(b):
         ans = -math.inf
     else:
-        maxim = tm.max(a, b)
-        minim = tm.min(a, b)
-        ans = maxim + tm.log(1.0 - tm.exp(minim - maxim))
+        maxim = max(a, b)
+        minim = min(a, b)
+        ans = maxim + math.log(1.0 - math.exp(minim - maxim))
     return ans
 
 def add(a, b):
@@ -24,7 +28,7 @@ def n(log_p, n):
     return (sub(0.0, log_p)) * n
 
 m_min = 2
-m_max = 5
+m_max = 8
 
 m_table = 2
 table_size = 5
@@ -71,14 +75,19 @@ queue = cl.CommandQueue(context)
 # Load and compile the kernel
 program = cl.Program(context, kernel_code).build()
 
+
+# Kernel code for applying modified rule
+def modified(log_p, a, s, o, p1, p2, p3):
+    program.modified(queue, (1, a), None, o, p1, p2, p3,
+                     np.double(log_p), np.int32(a), np.int32(s))
+
+
 for m in range(m_min, m_max + 1):
     start_time = time.time()
     p_float = 2**(-m)
     a = math.floor(log_multiple * math.log(1.0 / p_float) / p_float)
 
-    #print(f"a = {a}")
-
-    log_p =  tm.log(p_float)
+    log_p =  math.log(p_float)
 
     dimensions = (7, a)
 
@@ -105,28 +114,30 @@ for m in range(m_min, m_max + 1):
     if m == m_table:
         fill_diagonal(2, n2, table)
 
+    # TODO: Fill up table
     for s in range(3, a):
         if s % 4 == 0:
             # supp_lo, supp_hi = update_supp(supp_lo, supp_hi, s, n0)
             modified(log_p, a, s, n0_buffer, n3_buffer, n2_buffer, n1_buffer) #, supp_lo, supp_hi)
-            if m == m_table:
-                #fill_diagonal(s, n0_buffer, table)
+            #if m == m_table:
+            #fill_diagonal(s, n0_buffer, table)
         if s % 4 == 1:
             # supp_lo, supp_hi = update_supp(supp_lo, supp_hi, s, n1_buffer)
             modified(log_p, a, s, n1_buffer, n0_buffer, n3_buffer, n2_buffer) #, supp_lo, supp_hi)
-            if m == m_table:
-                #fill_diagonal(s, n1_buffer, table)
+            #if m == m_table:
+            #fill_diagonal(s, n1_buffer, table)
         if s % 4 == 2:
             # supp_lo, supp_hi = update_supp(supp_lo, supp_hi, s, n2_buffer)
             modified(log_p, a, s, n2_buffer, n1_buffer, n0_buffer, n3_buffer) #, supp_lo, supp_hi)
-            if m == m_table:
-                #fill_diagonal(s, n2_buffer, table)
+            #if m == m_table:
+            #fill_diagonal(s, n2_buffer, table)
         if s % 4 == 3:
             # supp_lo, supp_hi = update_supp(supp_lo, supp_hi, s, n3_buffer)
             modified(log_p, a, s, n3_buffer, n2_buffer, n1_buffer, n0_buffer) #, supp_lo, supp_hi)
-            if m == m_table:
-                #fill_diagonal(s, n3_buffer, table)
+            #if m == m_table:
+            #fill_diagonal(s, n3_buffer, table)
 
+    queue.finish()
     cl.enqueue_copy(queue, n0, n0_buffer).wait()
     cl.enqueue_copy(queue, n1, n1_buffer).wait()
     cl.enqueue_copy(queue, n2, n2_buffer).wait()
@@ -154,11 +165,5 @@ for m in range(m_min, m_max + 1):
 # for k in range(0, 7):
 #     np.savetxt(f"table_{k}.csv", table[k][:][:], delimiter=",")
 
-# Kernel code for applying Rule 30
-
-def modified(log_p, a, s, o, p1, p2, p3):
-    program.modified(queue, (7, width), None, o, p1, p2, p3,
-                     np.double(log_p), np.int32(a), np.int32(s))
-
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

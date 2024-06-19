@@ -44,7 +44,7 @@ def f(log_p, n):
     return sub(0.0, sub(0.0, log_p) * n)
 
 m_min = 2
-m_max = 5
+m_max = 8
 
 m_table = 2
 table_size = 5
@@ -53,8 +53,8 @@ log_multiple = 2.5
 
 restrict_support = False
 
-ti.init(arch=ti.gpu, default_fp=ti.f64)
-#ti.init(arch=ti.cpu, default_fp=ti.f64)
+#ti.init(arch=ti.gpu, default_fp=ti.f64)
+ti.init(arch=ti.cpu, default_fp=ti.f64)
 
 @ti.kernel
 def init(log_p: float, n2: ti.template()):

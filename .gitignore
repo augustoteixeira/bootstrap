@@ -1,5 +1,8 @@
 rust/analysis/*
 
+*.txt
+*.csv
+
 # jupyter
 jupyter/.ipynb_checkpoints/*
 *.ipynb
