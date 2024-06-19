@@ -23,11 +23,5 @@ __kernel void rule30(__global double* input, __global double* output, const int 
   double middle = input[x + y * width];
   double right = input[(x + 1) % width + y * width];
 
-  //printf("i[49] = %f, i[50] = %f, i[51] = %f\n", input[49], input[50], input[51]);
-  //printf("x = %4d, y = %d, left = %f, ",,
-  //       x, y, left);
-  //printf("middle = %f, right = %f, update = %f, r-index = %d",
-  //       middle, right, apply_rule30(left, middle, right), (x + 1) % width + y * width);
-
   output[x + y * width] = apply_rule30(left, middle, right);
 }
