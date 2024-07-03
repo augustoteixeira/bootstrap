@@ -132,16 +132,20 @@ fn print_image(grid: &impl Memory) {
 
 fn main() {
     let side = 200;
+    let p = 0.06;
+    let iterations = 10000;
     let mut grid = ByteArray::new(side);
     let seed = 234234;
-    fill(&mut grid, 0.06, seed);
+    fill(&mut grid, p, seed);
     if side <= 80 {
         print_image(&grid);
     }
     if side <= 1000 {
         write_image(&grid, "test0.png".to_string());
     }
-    modified_step(&mut grid);
+    for _ in 0..iterations {
+        modified_step(&mut grid);
+    }
     if side <= 1000 {
         write_image(&grid, "test1.png".to_string());
     }
