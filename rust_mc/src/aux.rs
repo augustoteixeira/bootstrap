@@ -21,16 +21,27 @@ pub fn write_image(grid: &impl Memory, path: String) {
 
 pub fn print_image(grid: &impl Memory) {
     let side: i32 = grid.get_side().try_into().unwrap();
-    for y in 0..side {
+    for y in (0..side).rev() {
+        print!("|");
         for x in 0..side {
             print!(
                 "{:}",
-                match grid.get(x, side - y - 1) {
+                match grid.get(x, y) {
                     true => "x",
-                    false => " ",
+                    false => ".",
                 }
             );
         }
-        println!("");
+        println!("|");
+    }
+}
+
+#[allow(dead_code)]
+pub fn pedantic_print(grid: &impl Memory) {
+    let side = grid.get_side();
+    for y in 0..side {
+        for x in 0..side {
+            println!("x = {:}, y = {:}, v = {:}", x, y, grid.get(x, y));
+        }
     }
 }
