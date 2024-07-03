@@ -1,78 +1,62 @@
 mod memory;
 use clap::Parser;
-use indicatif::{ProgressBar, ProgressStyle};
-use memory::Memory;
-
-mod bool_vec;
-use bool_vec::ByteArray;
+//use indicatif::{ProgressBar, ProgressStyle};
+use std::time::Duration;
 
 mod aux;
-use aux::write_image;
-
-mod operations;
-use operations::{fill_random, is_filled};
-
+mod bool_vec;
 mod modified;
-use modified::modified_run;
+//use aux::write_image;
+mod operations;
+use operations::process_batch;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    #[arg(short, long, value_name = "SIDE_LENGTH")]
-    side: i32,
-    #[arg(short, long, value_name = "PROBABILITY")]
-    p: f64,
-    #[arg(short, long, value_name = "NUMBER_SAMPLES")]
-    num_samples: usize,
+    // #[arg(short, long, value_name = "INFECTION_PROBABILITY")]
+    // p: f64,
+    #[arg(short, long, value_name = "MAX_M")]
+    max_m: u64,
     #[arg(short, long, value_name = "SEED_OFFSET")]
     offset: u64,
+    #[arg(short, long, value_name = "SAMPLE_MULTIPLIER")]
+    sample_multiplier: usize,
 }
+
+#[allow(dead_code)]
+#[derive(Debug)]
+struct Batch {
+    infection_probability: f64,
+    side: usize,
+    num_samples: usize,
+    seed_offset: u64,
+    number_filled: usize,
+    proportion_filled: f64,
+    time_ellapsed: Duration,
+}
+
+//fn make_image() {
+//        write_image(&grid, "test1.png".to_string());
+//}
 
 fn main() {
     let cli = Cli::parse();
-    let side = cli.side;
-    let p = cli.p;
-    let num_samples = cli.num_samples;
-    let seed_offset = cli.offset;
-    let bar = ProgressBar::new(num_samples as u64);
-    bar.set_style(
-        ProgressStyle::with_template(
-            "[{elapsed_precise}] {bar:30.cyan/blue} {pos:>7}/{len:7} {msg} ETA {eta}",
-        )
-        .unwrap()
-        .progress_chars("##-"),
-    );
-    let mut number_filled = 0;
-    for seed in 0..num_samples {
-        bar.inc(1);
-        bar.set_message(format!("Filled {:}", number_filled));
-        let mut grid = ByteArray::new(side);
-        fill_random(&mut grid, p, seed_offset + seed as u64);
-        //if side <= 1000 {
-        //    write_image(&grid, "test0.png".to_string());
-        //}
-        //print!("sample = {:10}. ", seed);
-        let _final_step = modified_run(&mut grid);
-        if is_filled(&grid) {
-            number_filled += 1;
-            //print!("It filled!  ");
-        } else {
-            //print!("Not filled! ");
-        }
-        //write_image(&grid, "test.png".to_string());
-        //println!("Final step = {:}", final_step);
-        //if side <= 80 {
-        //    print_image(&grid);
-        //}
-        //if side <= 1000 {
-        //    write_image(&grid, "test1.png".to_string());
-        //}
+    let max_m = cli.max_m;
+    let sample_multiplier = cli.sample_multiplier;
+    for m in 0..max_m {
+        println! {"Starting batch with m = {:}", m};
+        let p = (0.5 as f64).powf(2.0 + (m as f64) * 0.2);
+        let batch = process_batch(p, cli.offset, sample_multiplier);
+        println!("{:#?}", batch);
+        println!("");
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::bool_vec::ByteArray;
+    use super::memory::Memory;
+    use super::modified::modified_step;
 
     #[test]
     fn basic_set_get() {

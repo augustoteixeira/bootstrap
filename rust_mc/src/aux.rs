@@ -3,6 +3,7 @@ use std::path;
 
 use super::memory::Memory;
 
+#[allow(dead_code)]
 pub fn write_image(grid: &impl Memory, path: String) {
     let side: u32 = grid.get_side().try_into().unwrap();
     let mut img = RgbImage::new(side, side);
