@@ -71,13 +71,14 @@ fn fill(grid: &mut impl Memory, p: f64, seed: u64) {
     grid.set(0, 0, true);
 }
 
-fn modified_step(grid: &mut impl Memory) {
+fn modified_step(grid: &mut impl Memory) -> bool {
     // we think of the origin as being in the left bottom corner
     let mut nw: bool;
     let mut ne: bool;
     let mut sw: bool;
     let mut se: bool;
     let side = grid.get_side();
+    let mut updated = false;
     for x in 0..(side - 1) {
         for y in 0..(side - 1) {
             (nw, ne, sw, se) = (
@@ -87,15 +88,26 @@ fn modified_step(grid: &mut impl Memory) {
                 grid.get(x + 1, y),
             );
             if nw && se {
+                if updated == false {
+                    if !(nw && ne && sw && se) {
+                        updated = true;
+                    }
+                }
                 grid.set(x, y, true);
                 grid.set(x + 1, y + 1, true);
             }
             if ne && sw {
+                if updated == false {
+                    if !(nw && ne && sw && se) {
+                        updated = true;
+                    }
+                }
                 grid.set(x + 1, y, true);
                 grid.set(x, y + 1, true);
             }
         }
     }
+    return updated;
 }
 
 fn write_image(grid: &impl Memory, path: String) {
@@ -144,7 +156,9 @@ fn main() {
         write_image(&grid, "test0.png".to_string());
     }
     for _ in 0..iterations {
-        modified_step(&mut grid);
+        if !modified_step(&mut grid) {
+            break;
+        }
     }
     if side <= 1000 {
         write_image(&grid, "test1.png".to_string());
