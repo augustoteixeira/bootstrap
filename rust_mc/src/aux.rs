@@ -19,6 +19,7 @@ pub fn write_image(grid: &impl Memory, path: String) {
         .unwrap();
 }
 
+#[allow(dead_code)]
 pub fn print_image(grid: &impl Memory) {
     let side: i32 = grid.get_side().try_into().unwrap();
     for y in (0..side).rev() {
