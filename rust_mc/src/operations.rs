@@ -38,6 +38,8 @@ pub fn is_filled(grid: &impl Memory) -> bool {
     return true;
 }
 
+const SIZE_SUBBATCH: usize = 100;
+
 pub fn process_batch(
     p: f64,
     seed_offset: u64,
@@ -55,19 +57,31 @@ pub fn process_batch(
     );
     let mut number_filled = 0;
     let mut number_samples = 0;
-    loop {
+    'outer: loop {
         bar.set_position(number_filled);
         bar.set_message(format!("Filled {:}", number_filled));
-        let mut grid = ByteArray::new(side);
-        fill_random(&mut grid, p, seed_offset + number_samples as u64);
-        let _final_step = modified_run(&mut grid);
-        if is_filled(&grid) {
-            number_filled += 1;
+        let mut mask: [bool; SIZE_SUBBATCH] = [false; SIZE_SUBBATCH];
+        for j in 0..SIZE_SUBBATCH {
+            let mut grid = ByteArray::new(side);
+            fill_random(
+                &mut grid,
+                p,
+                seed_offset + (number_samples as u64) + j as u64,
+            );
+            let _final_step = modified_run(&mut grid);
+            if is_filled(&grid) {
+                mask[j] = true;
+            }
         }
-        if number_filled == (number_filled_required as u64) {
-            break;
+        for j in 0..SIZE_SUBBATCH {
+            if mask[j] {
+                number_filled += 1;
+            }
+            if number_filled == (number_filled_required as u64) {
+                break 'outer;
+            }
+            number_samples += 1;
         }
-        number_samples += 1;
     }
     bar.finish_and_clear();
     let proportion_filled = (number_filled as f64) / (number_samples as f64);
