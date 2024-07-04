@@ -35,6 +35,8 @@ enum Command {
         p: f64,
         #[arg(short, value_name = "INFECTION_PROBABILITY")]
         side: Option<u64>,
+        #[arg(short, value_name = "SHOULD_WRITE_IMAGE")]
+        write: bool,
     },
 }
 
@@ -79,9 +81,14 @@ fn main() {
                 println!("");
             }
         }
-        Command::Single { p, side } => {
-            let single =
-                process_single(p, side, cli.offset, "test.png".to_string());
+        Command::Single { p, side, write } => {
+            let single = process_single(
+                p,
+                side,
+                cli.offset,
+                "test.png".to_string(),
+                write,
+            );
             println!("{:#?}", single);
         }
     }

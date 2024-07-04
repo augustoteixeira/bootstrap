@@ -88,6 +88,7 @@ pub fn process_single(
     side: Option<u64>,
     seed_offset: u64,
     file_path: String,
+    should_write: bool,
 ) -> Single {
     let side: u64 = match side {
         Some(s) => s,
@@ -98,7 +99,9 @@ pub fn process_single(
     fill_random(&mut grid, p, seed_offset as u64);
     let final_step = modified_run(&mut grid);
     let duration = start.elapsed();
-    write_image(&grid, file_path.to_string());
+    if should_write {
+        write_image(&grid, file_path.to_string());
+    }
     Single {
         infection_probability: p,
         side: side.try_into().unwrap(),
