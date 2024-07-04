@@ -1,6 +1,7 @@
 use indicatif::{ProgressBar, ProgressStyle};
 use rand::distributions::{Bernoulli, Distribution};
 use rand::SeedableRng;
+use rayon::prelude::*;
 use std::time::Instant;
 
 use super::aux::write_image;
@@ -61,7 +62,7 @@ pub fn process_batch(
         bar.set_position(number_filled);
         bar.set_message(format!("Filled {:}", number_filled));
         let mut mask: [bool; SIZE_SUBBATCH] = [false; SIZE_SUBBATCH];
-        for (j, has_filled) in mask.iter_mut().enumerate() {
+        mask.par_iter_mut().enumerate().for_each(|(j, has_filled)| {
             let mut grid = ByteArray::new(side);
             fill_random(
                 &mut grid,
@@ -72,7 +73,7 @@ pub fn process_batch(
             if is_filled(&grid) {
                 *has_filled = true;
             }
-        }
+        });
         for j in 0..SIZE_SUBBATCH {
             if mask[j] {
                 number_filled += 1;
