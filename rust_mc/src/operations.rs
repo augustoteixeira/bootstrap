@@ -6,7 +6,7 @@ use std::time::Instant;
 use super::aux::write_image;
 use super::bool_vec::ByteArray;
 use super::memory::Memory;
-use super::modified::{droplet_size, modified_run, number_of_samples};
+use super::modified::{droplet_size, modified_run};
 use super::{Batch, Single};
 
 pub fn fill_random(grid: &mut impl Memory, p: f64, seed: u64) {
@@ -41,13 +41,11 @@ pub fn is_filled(grid: &impl Memory) -> bool {
 pub fn process_batch(
     p: f64,
     seed_offset: u64,
-    sample_multiplier: f64,
+    number_filled_required: usize,
 ) -> Batch {
     let start = Instant::now();
     let side: i32 = droplet_size(p).try_into().unwrap();
-    let num_samples =
-        (sample_multiplier * (number_of_samples(p)) as f64) as usize;
-    let bar = ProgressBar::new(num_samples as u64);
+    let bar = ProgressBar::new(number_filled_required as u64);
     bar.set_style(
         ProgressStyle::with_template(
             "[{elapsed_precise}] {bar:30.cyan/blue} {pos:>7}/{len:7} {msg} ETA {eta}",
@@ -56,25 +54,30 @@ pub fn process_batch(
         .progress_chars("##-"),
     );
     let mut number_filled = 0;
-    for seed in 0..num_samples {
-        bar.inc(1);
+    let mut number_samples = 0;
+    loop {
+        bar.set_position(number_filled);
         bar.set_message(format!("Filled {:}", number_filled));
         let mut grid = ByteArray::new(side);
-        fill_random(&mut grid, p, seed_offset + seed as u64);
+        fill_random(&mut grid, p, seed_offset + number_samples as u64);
         let _final_step = modified_run(&mut grid);
         if is_filled(&grid) {
             number_filled += 1;
         }
+        if number_filled == (number_filled_required as u64) {
+            break;
+        }
+        number_samples += 1;
     }
     bar.finish_and_clear();
-    let proportion_filled = (number_filled as f64) / (num_samples as f64);
+    let proportion_filled = (number_filled as f64) / (number_samples as f64);
     let duration = start.elapsed();
     Batch {
         infection_probability: p,
         side: side.try_into().unwrap(),
-        num_samples,
         seed_offset,
-        number_filled,
+        number_filled: number_filled as usize,
+        num_samples: number_samples,
         proportion_filled,
         time_ellapsed: duration,
     }

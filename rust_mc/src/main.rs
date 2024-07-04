@@ -27,8 +27,8 @@ enum Command {
         max_m: u64,
         #[arg(long, value_name = "MIN_M")]
         min_m: u64,
-        #[arg(short, long, value_name = "SAMPLE_MULTIPLIER")]
-        sample_multiplier: f64,
+        #[arg(short, long, value_name = "NUMBER_OF_FILLED_BOXES_REQUIRED")]
+        number_filled_required: usize,
     },
     Single {
         #[arg(short, value_name = "INFECTION_PROBABILITY")]
@@ -67,14 +67,14 @@ fn main() {
         Command::Batch {
             max_m,
             min_m,
-            sample_multiplier,
+            number_filled_required,
         } => {
             let max_m = max_m;
-            let sample_multiplier = sample_multiplier;
             for m in min_m..=max_m {
                 println! {"Starting batch with m = {:}", m};
                 let p = (0.5 as f64).powf(2.0 + (m as f64) * 0.2);
-                let batch = process_batch(p, cli.offset, sample_multiplier);
+                let batch =
+                    process_batch(p, cli.offset, number_filled_required);
                 println!("{:#?}", batch);
                 println!("");
             }
