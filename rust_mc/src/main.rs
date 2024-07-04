@@ -6,25 +6,40 @@ use std::time::Duration;
 mod aux;
 mod bool_vec;
 mod modified;
-//use aux::write_image;
 mod operations;
-use operations::process_batch;
+use operations::{process_batch, process_single};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    // #[arg(short, long, value_name = "INFECTION_PROBABILITY")]
-    // p: f64,
-    #[arg(short, long, value_name = "MAX_M")]
-    max_m: u64,
     #[arg(short, long, value_name = "SEED_OFFSET")]
     offset: u64,
-    #[arg(short, long, value_name = "SAMPLE_MULTIPLIER")]
-    sample_multiplier: usize,
+    #[command(subcommand)]
+    cmd: Command,
 }
 
-#[allow(dead_code)]
+#[derive(Parser)]
+#[command(version, about, long_about = None)]
+#[derive(Debug, Clone)]
+enum Command {
+    Batch {
+        #[arg(long, value_name = "MAX_M")]
+        max_m: u64,
+        #[arg(long, value_name = "MIN_M")]
+        min_m: u64,
+        #[arg(short, long, value_name = "SAMPLE_MULTIPLIER")]
+        sample_multiplier: f64,
+    },
+    Single {
+        #[arg(short, value_name = "INFECTION_PROBABILITY")]
+        p: f64,
+        #[arg(short, value_name = "INFECTION_PROBABILITY")]
+        side: Option<u64>,
+    },
+}
+
 #[derive(Debug)]
+#[allow(dead_code)]
 struct Batch {
     infection_probability: f64,
     side: usize,
@@ -35,20 +50,40 @@ struct Batch {
     time_ellapsed: Duration,
 }
 
-//fn make_image() {
-//        write_image(&grid, "test1.png".to_string());
-//}
+#[derive(Debug)]
+#[allow(dead_code)]
+struct Single {
+    infection_probability: f64,
+    side: usize,
+    seed_offset: u64,
+    was_filled: bool,
+    time_ellapsed: Duration,
+    final_step: usize,
+}
 
 fn main() {
     let cli = Cli::parse();
-    let max_m = cli.max_m;
-    let sample_multiplier = cli.sample_multiplier;
-    for m in 0..max_m {
-        println! {"Starting batch with m = {:}", m};
-        let p = (0.5 as f64).powf(2.0 + (m as f64) * 0.2);
-        let batch = process_batch(p, cli.offset, sample_multiplier);
-        println!("{:#?}", batch);
-        println!("");
+    match cli.cmd {
+        Command::Batch {
+            max_m,
+            min_m,
+            sample_multiplier,
+        } => {
+            let max_m = max_m;
+            let sample_multiplier = sample_multiplier;
+            for m in min_m..=max_m {
+                println! {"Starting batch with m = {:}", m};
+                let p = (0.5 as f64).powf(2.0 + (m as f64) * 0.2);
+                let batch = process_batch(p, cli.offset, sample_multiplier);
+                println!("{:#?}", batch);
+                println!("");
+            }
+        }
+        Command::Single { p, side } => {
+            let single =
+                process_single(p, side, cli.offset, "test.png".to_string());
+            println!("{:#?}", single);
+        }
     }
 }
 

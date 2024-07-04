@@ -3,11 +3,11 @@ use rand::distributions::{Bernoulli, Distribution};
 use rand::SeedableRng;
 use std::time::Instant;
 
-use super::modified::{droplet_size, modified_run, number_of_samples};
-
+use super::aux::write_image;
 use super::bool_vec::ByteArray;
 use super::memory::Memory;
-use super::Batch;
+use super::modified::{droplet_size, modified_run, number_of_samples};
+use super::{Batch, Single};
 
 pub fn fill_random(grid: &mut impl Memory, p: f64, seed: u64) {
     // TODO: Check for other RNG with faster speeds, chacha is crypto-secure
@@ -41,11 +41,12 @@ pub fn is_filled(grid: &impl Memory) -> bool {
 pub fn process_batch(
     p: f64,
     seed_offset: u64,
-    sample_multiplier: usize,
+    sample_multiplier: f64,
 ) -> Batch {
     let start = Instant::now();
     let side: i32 = droplet_size(p).try_into().unwrap();
-    let num_samples = sample_multiplier * number_of_samples(p);
+    let num_samples =
+        (sample_multiplier * (number_of_samples(p)) as f64) as usize;
     let bar = ProgressBar::new(num_samples as u64);
     bar.set_style(
         ProgressStyle::with_template(
@@ -76,5 +77,31 @@ pub fn process_batch(
         number_filled,
         proportion_filled,
         time_ellapsed: duration,
+    }
+}
+
+pub fn process_single(
+    p: f64,
+    side: Option<u64>,
+    seed_offset: u64,
+    file_path: String,
+) -> Single {
+    let side: u64 = match side {
+        Some(s) => s,
+        None => droplet_size(p) as u64,
+    };
+    let start = Instant::now();
+    let mut grid = ByteArray::new(side as i32);
+    fill_random(&mut grid, p, seed_offset as u64);
+    let final_step = modified_run(&mut grid);
+    let duration = start.elapsed();
+    write_image(&grid, file_path.to_string());
+    Single {
+        infection_probability: p,
+        side: side.try_into().unwrap(),
+        seed_offset,
+        was_filled: is_filled(&grid),
+        time_ellapsed: duration,
+        final_step,
     }
 }
