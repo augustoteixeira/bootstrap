@@ -61,7 +61,7 @@ pub fn process_batch(
         bar.set_position(number_filled);
         bar.set_message(format!("Filled {:}", number_filled));
         let mut mask: [bool; SIZE_SUBBATCH] = [false; SIZE_SUBBATCH];
-        for j in 0..SIZE_SUBBATCH {
+        for (j, has_filled) in mask.iter_mut().enumerate() {
             let mut grid = ByteArray::new(side);
             fill_random(
                 &mut grid,
@@ -70,7 +70,7 @@ pub fn process_batch(
             );
             let _final_step = modified_run(&mut grid);
             if is_filled(&grid) {
-                mask[j] = true;
+                *has_filled = true;
             }
         }
         for j in 0..SIZE_SUBBATCH {
