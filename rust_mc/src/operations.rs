@@ -1,5 +1,6 @@
 use indicatif::{ProgressBar, ProgressStyle};
 use rand::distributions::{Bernoulli, Distribution};
+use rand::rngs::SmallRng;
 use rand::SeedableRng;
 use rayon::prelude::*;
 use std::time::Instant;
@@ -13,7 +14,8 @@ use super::{Batch, Single};
 pub fn fill_random(grid: &mut impl Memory, p: f64, seed: u64) {
     // TODO: Check for other RNG with faster speeds, chacha is crypto-secure
     // TODO: Read about thread-safe RNG
-    let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed);
+    // let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed);
+    let mut rng = SmallRng::seed_from_u64(seed);
     let bernoulli = Bernoulli::new(p).unwrap();
     let side = grid.get_side();
     for x in 0..side {
