@@ -5,15 +5,24 @@ use std::time::Duration;
 
 mod aux;
 mod bool_vec;
+mod frobose;
 mod modified;
 mod operations;
 use operations::{process_batch, process_single};
+
+#[derive(clap::ValueEnum, Clone, Debug)]
+enum Model {
+    Modified,
+    Frobose,
+}
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Cli {
     #[arg(short, long, value_name = "SEED_OFFSET")]
     offset: u64,
+    #[arg(short, long, value_name = "MODEL")]
+    model: Model,
     #[command(subcommand)]
     cmd: Command,
 }
@@ -75,8 +84,12 @@ fn main() {
             for m in min_m..=max_m {
                 println! {"Starting batch with m = {:}", m};
                 let p = (0.5 as f64).powf(2.0 + (m as f64) * 0.2);
-                let batch =
-                    process_batch(p, cli.offset, number_filled_required);
+                let batch = process_batch(
+                    p,
+                    cli.offset,
+                    number_filled_required,
+                    cli.model.clone(),
+                );
                 println!("{:#?}", batch);
                 println!("");
             }
@@ -88,6 +101,7 @@ fn main() {
                 cli.offset,
                 "test.png".to_string(),
                 write,
+                cli.model,
             );
             println!("{:#?}", single);
         }

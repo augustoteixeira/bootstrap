@@ -1,13 +1,13 @@
 use super::memory::Memory;
 
-const MODIFIED_LOG_MULTIPLIER: f64 = 2.0;
+const FROBOSE_LOG_MULTIPLIER: f64 = 2.0;
 
-pub fn modified_droplet_size(p: f64) -> usize {
+pub fn frobose_droplet_size(p: f64) -> usize {
     let log_inv_p = -p.ln();
-    return (MODIFIED_LOG_MULTIPLIER * log_inv_p / p) as usize;
+    return (FROBOSE_LOG_MULTIPLIER * log_inv_p / p) as usize;
 }
 
-pub fn modified_step(grid: &mut impl Memory) -> bool {
+pub fn frobose_step(grid: &mut impl Memory) -> bool {
     // we think of the origin as being in the left bottom corner
     let mut nw: bool;
     let mut ne: bool;
@@ -47,11 +47,11 @@ pub fn modified_step(grid: &mut impl Memory) -> bool {
     return updated;
 }
 
-pub fn modified_run(grid: &mut impl Memory) -> usize {
+pub fn frobose_run(grid: &mut impl Memory) -> usize {
     let mut i = 0;
     let mut updated;
     loop {
-        updated = modified_step(grid);
+        updated = frobose_step(grid);
         i += 1;
         if !updated {
             break;

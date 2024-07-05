@@ -7,8 +7,10 @@ use std::time::Instant;
 
 use super::aux::write_image;
 use super::bool_vec::ByteArray;
+use super::frobose::{frobose_droplet_size, frobose_run};
 use super::memory::Memory;
-use super::modified::{droplet_size, modified_run};
+use super::modified::{modified_droplet_size, modified_run};
+use super::Model;
 use super::{Batch, Single};
 
 pub fn fill_random(grid: &mut impl Memory, p: f64, seed: u64) {
@@ -47,9 +49,13 @@ pub fn process_batch(
     p: f64,
     seed_offset: u64,
     number_filled_required: usize,
+    model: Model,
 ) -> Batch {
     let start = Instant::now();
-    let side: i32 = droplet_size(p).try_into().unwrap();
+    let side: i32 = match model {
+        Model::Modified => modified_droplet_size(p).try_into().unwrap(),
+        Model::Frobose => frobose_droplet_size(p).try_into().unwrap(),
+    };
     let bar = ProgressBar::new(number_filled_required as u64);
     bar.set_style(
         ProgressStyle::with_template(
@@ -106,15 +112,19 @@ pub fn process_single(
     seed_offset: u64,
     file_path: String,
     should_write: bool,
+    model: Model,
 ) -> Single {
     let side: u64 = match side {
         Some(s) => s,
-        None => droplet_size(p) as u64,
+        None => modified_droplet_size(p) as u64,
     };
     let start = Instant::now();
     let mut grid = ByteArray::new(side as i32);
     fill_random(&mut grid, p, seed_offset as u64);
-    let final_step = modified_run(&mut grid);
+    let final_step = match model {
+        Model::Modified => modified_run(&mut grid),
+        Model::Frobose => frobose_run(&mut grid),
+    };
     let duration = start.elapsed();
     if should_write {
         write_image(&grid, file_path.to_string());
