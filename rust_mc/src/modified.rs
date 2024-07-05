@@ -2,17 +2,6 @@ use super::memory::Memory;
 
 const LOG_MULTIPLIER: f64 = 2.0;
 
-pub fn number_of_samples(p: f64) -> usize {
-    let first_coef = 3.289868133696453; // explicit
-    let second_coef = 1.8477590650225735; // explicit
-    let third_coef = 7.43; // fitted
-    let log_inv_p = -p.ln();
-    let exponent = first_coef / p
-        - second_coef * log_inv_p / p.sqrt()
-        - third_coef / p.powf(0.2);
-    exponent.exp().ceil() as usize
-}
-
 pub fn droplet_size(p: f64) -> usize {
     let log_inv_p = -p.ln();
     return (LOG_MULTIPLIER * log_inv_p / p) as usize;
