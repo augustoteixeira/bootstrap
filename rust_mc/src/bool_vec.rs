@@ -27,8 +27,7 @@ impl Memory for ByteArray {
         if y < 0 || x >= self.side {
             return false;
         }
-        let index: usize =
-            (x + y * self.side).try_into().expect("Index out of bounds");
+        let index: usize = (x + y * self.side) as usize;
         return unsafe { *self.data.get_unchecked(index) };
     }
     fn set(&mut self, x: Index, y: Index) {
@@ -38,8 +37,7 @@ impl Memory for ByteArray {
         if y < 0 || x >= self.side {
             return;
         }
-        let index: usize =
-            (x + y * self.side).try_into().expect("Index out of bounds");
+        let index: usize = (x + y * self.side) as usize;
         self.data[index] = true;
     }
 }
