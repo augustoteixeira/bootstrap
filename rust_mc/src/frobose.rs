@@ -24,23 +24,24 @@ pub fn frobose_step(grid: &mut impl Memory) -> bool {
                 grid.get(x + 1, y),
             );
             //println!("{:},{:},{:},{:},{:},{:}", x, y, nw, ne, sw, se);
-            if nw && se {
-                if updated == false {
-                    if !(ne && sw) {
-                        updated = true;
-                    }
+            match (nw, ne, sw, se) {
+                (true, true, true, false) => {
+                    updated = true;
+                    grid.set(x + 1, y);
                 }
-                grid.set(x, y);
-                grid.set(x + 1, y + 1);
-            }
-            if ne && sw {
-                if updated == false {
-                    if !(nw && se) {
-                        updated = true;
-                    }
+                (true, true, false, true) => {
+                    updated = true;
+                    grid.set(x, y);
                 }
-                grid.set(x + 1, y);
-                grid.set(x, y + 1);
+                (true, false, true, true) => {
+                    updated = true;
+                    grid.set(x + 1, y + 1);
+                }
+                (false, true, true, true) => {
+                    updated = true;
+                    grid.set(x, y + 1);
+                }
+                _ => {}
             }
         }
     }
