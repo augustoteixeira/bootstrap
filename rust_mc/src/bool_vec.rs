@@ -1,8 +1,8 @@
 use super::memory::{Index, Memory};
 
 pub struct ByteArray {
-    side: Index,
-    data: Vec<bool>,
+    pub side: Index,
+    pub data: Vec<bool>,
 }
 
 impl Memory for ByteArray {

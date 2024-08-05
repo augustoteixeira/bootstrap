@@ -1,5 +1,7 @@
 mod memory;
 use clap::Parser;
+use frobose::frobose_droplet_size;
+use modified::modified_droplet_size;
 //use indicatif::{ProgressBar, ProgressStyle};
 use std::time::Duration;
 
@@ -8,7 +10,7 @@ mod bool_vec;
 mod frobose;
 mod modified;
 mod operations;
-use operations::{process_batch, process_single};
+use operations::{process_batch, process_droplet, process_single};
 
 #[derive(clap::ValueEnum, Clone, Debug)]
 enum Model {
@@ -47,6 +49,12 @@ enum Command {
         #[arg(short, value_name = "SHOULD_WRITE_IMAGE")]
         write: bool,
     },
+    Droplet {
+        #[arg(short, value_name = "INFECTION_PROBABILITY")]
+        p: f64,
+        #[arg(short, value_name = "SHOULD_WRITE_IMAGE")]
+        write: bool,
+    },
 }
 
 #[derive(Debug)]
@@ -68,6 +76,16 @@ struct Single {
     side: usize,
     seed_offset: u64,
     was_filled: bool,
+    time_ellapsed: Duration,
+    final_step: usize,
+}
+
+#[derive(Debug)]
+#[allow(dead_code)]
+struct Droplet {
+    infection_probability: f64,
+    side: usize,
+    seed_offset: u64,
     time_ellapsed: Duration,
     final_step: usize,
 }
@@ -95,7 +113,29 @@ fn main() {
             }
         }
         Command::Single { p, side, write } => {
+            let side: usize = match side {
+                Some(s) => s as usize,
+                None => match cli.model {
+                    Model::Modified => modified_droplet_size(p),
+                    Model::Frobose => frobose_droplet_size(p),
+                },
+            };
             let single = process_single(
+                p,
+                side as u64,
+                cli.offset,
+                "test.png".to_string(),
+                write,
+                cli.model,
+            );
+            println!("{:#?}", single);
+        }
+        Command::Droplet { p, write } => {
+            let side: usize = match cli.model {
+                Model::Modified => modified_droplet_size(p),
+                Model::Frobose => frobose_droplet_size(p),
+            };
+            let droplet = process_droplet(
                 p,
                 side,
                 cli.offset,
@@ -103,7 +143,7 @@ fn main() {
                 write,
                 cli.model,
             );
-            println!("{:#?}", single);
+            println!("{:#?}", droplet);
         }
     }
 }

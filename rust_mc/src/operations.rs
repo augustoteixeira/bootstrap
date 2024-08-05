@@ -7,11 +7,20 @@ use std::time::Instant;
 
 use super::aux::write_image;
 use super::bool_vec::ByteArray;
-use super::frobose::{frobose_droplet_size, frobose_run};
+use super::frobose::{frobose_droplet_size, frobose_run, frobose_step};
 use super::memory::Memory;
-use super::modified::{modified_droplet_size, modified_run};
+use super::modified::{modified_droplet_size, modified_run, modified_step};
 use super::Model;
-use super::{Batch, Single};
+use super::{Batch, Droplet, Single};
+
+pub fn clear_grid(grid: &mut ByteArray) {
+    let side = grid.get_side() as usize;
+    for x in 0..side {
+        for y in 0..side {
+            grid.data[y * side + x] = false;
+        }
+    }
+}
 
 pub fn fill_random(grid: &mut impl Memory, p: f64, seed: u64) {
     // TODO: Check for other RNG with faster speeds, chacha is crypto-secure
@@ -28,6 +37,30 @@ pub fn fill_random(grid: &mut impl Memory, p: f64, seed: u64) {
             }
         }
     }
+}
+
+pub fn film_evolution(
+    p: f64,
+    side: u64,
+    seed_offset: u64,
+    model: Model,
+) -> (i32, Vec<i32>) {
+    let mut image: Vec<i32> = vec![-1; (side * side) as usize];
+    let mut grid = ByteArray::new(side as i32);
+    fill_random(&mut grid, p, seed_offset as u64);
+    let mut i = 0;
+    let mut updated;
+    loop {
+        updated = match model {
+            Model::Modified => modified_step(&mut grid),
+            Model::Frobose => frobose_step(&mut grid),
+        };
+        i += 1;
+        if !updated {
+            break;
+        }
+    }
+    return (i, image);
 }
 
 #[allow(dead_code)]
@@ -108,16 +141,12 @@ pub fn process_batch(
 
 pub fn process_single(
     p: f64,
-    side: Option<u64>,
+    side: u64,
     seed_offset: u64,
     file_path: String,
     should_write: bool,
     model: Model,
 ) -> Single {
-    let side: u64 = match side {
-        Some(s) => s,
-        None => modified_droplet_size(p) as u64,
-    };
     let start = Instant::now();
     let mut grid = ByteArray::new(side as i32);
     fill_random(&mut grid, p, seed_offset as u64);
@@ -134,6 +163,48 @@ pub fn process_single(
         side: side.try_into().unwrap(),
         seed_offset,
         was_filled: is_filled(&grid),
+        time_ellapsed: duration,
+        final_step,
+    }
+}
+
+pub fn process_droplet(
+    p: f64,
+    side: usize,
+    seed_offset: u64,
+    file_path: String,
+    should_write: bool,
+    model: Model,
+) -> Droplet {
+    let start = Instant::now();
+    let mut grid = ByteArray::new(side as i32);
+    let mut seed_increment = 0;
+    let mut duration;
+    let mut final_step;
+    loop {
+        fill_random(&mut grid, p, (seed_offset + seed_increment) as u64);
+        seed_increment += 1;
+        final_step = match model {
+            Model::Modified => modified_run(&mut grid),
+            Model::Frobose => frobose_run(&mut grid),
+        };
+        duration = start.elapsed();
+        if is_filled(&grid) {
+            break;
+        };
+        println!(
+            "p = {p}, final_step = {final_step}, duration = {:?}, side = {side}",
+            duration
+        );
+        clear_grid(&mut grid);
+    }
+    if should_write {
+        write_image(&grid, file_path.to_string());
+    }
+    Droplet {
+        infection_probability: p,
+        side: side.try_into().unwrap(),
+        seed_offset,
         time_ellapsed: duration,
         final_step,
     }
