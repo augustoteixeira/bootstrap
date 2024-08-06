@@ -10,6 +10,7 @@ mod bool_vec;
 mod frobose;
 mod modified;
 mod operations;
+mod u64_vec;
 use operations::{process_batch, process_droplet, process_single};
 
 #[derive(clap::ValueEnum, Clone, Debug)]
