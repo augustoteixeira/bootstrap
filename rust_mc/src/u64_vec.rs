@@ -27,7 +27,7 @@ impl U64Array {
 }
 
 impl Memory for U64Array {
-    fn new(side: Index) -> Self {
+    fn new_filled_with_false(side: Index) -> Self {
         if side <= 0 {
             panic!("Size non-positive")
         }

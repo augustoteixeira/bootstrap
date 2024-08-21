@@ -3,6 +3,7 @@ use image::{Rgb, RgbImage};
 use std::path;
 
 use super::memory::Memory;
+use super::operations::INITIAL_INFECTION_VALUE;
 use super::u64_vec::U64Array;
 
 use enterpolation::linear::Linear;
@@ -54,7 +55,12 @@ pub fn write_color_image(grid: &U64Array, path: String) {
 
     // setup normalization and interpolation and color palette
     let min_value: f64 = *grid.data.iter().min().unwrap() as f64;
-    let max_value: f64 = *grid.data.iter().max().unwrap() as f64;
+    let max_value: f64 = *grid
+        .data
+        .iter()
+        .filter(|x| **x < INITIAL_INFECTION_VALUE)
+        .max()
+        .unwrap() as f64;
     let gradient = Linear::builder()
         .elements(spectral)
         .equidistant::<f64>()
@@ -67,9 +73,15 @@ pub fn write_color_image(grid: &U64Array, path: String) {
     for x in 0..side {
         for y in 0..side {
             if grid.get(x as i32, y as i32) {
-                let value = grid.get_value(x as i32, y as i32) as f64;
-                let rgb = gradient.gen(value).into_format::<u8>();
-                let color = Rgb([rgb.red, rgb.green, rgb.blue]);
+                let u64_value = grid.get_value(x as i32, y as i32);
+                let color;
+                if u64_value == INITIAL_INFECTION_VALUE {
+                    color = Rgb([30, 30, 30]);
+                } else {
+                    let value = u64_value as f64;
+                    let rgb = gradient.gen(value).into_format::<u8>();
+                    color = Rgb([rgb.red, rgb.green, rgb.blue]);
+                }
                 img.put_pixel(x, side - y - 1, color);
             } else {
                 img.put_pixel(x, side - y - 1, Rgb([0, 0, 0]));

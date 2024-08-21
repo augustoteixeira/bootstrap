@@ -82,13 +82,16 @@ pub fn process_batch(
         bar.set_message(format!("Filled {:}", number_filled));
         let mut mask: [bool; SIZE_SUBBATCH] = [false; SIZE_SUBBATCH];
         mask.par_iter_mut().enumerate().for_each(|(j, has_filled)| {
-            let mut grid = ByteArray::new(side);
+            let mut grid = ByteArray::new_filled_with_false(side);
             fill_random(
                 &mut grid,
                 p,
                 seed_offset + (number_samples as u64) + j as u64,
             );
-            let _final_step = modified_run(&mut grid);
+            match model {
+                Model::Modified => _ = modified_run(&mut grid),
+                Model::Frobose => _ = frobose_run(&mut grid),
+            }
             if is_filled(&grid) {
                 *has_filled = true;
             }
@@ -126,7 +129,7 @@ pub fn process_single(
     model: Model,
 ) -> Single {
     let start = Instant::now();
-    let mut grid = ByteArray::new(side as i32);
+    let mut grid = ByteArray::new_filled_with_false(side as i32);
     fill_random(&mut grid, p, seed_offset as u64);
     let final_step = match model {
         Model::Modified => modified_run(&mut grid),
@@ -146,6 +149,8 @@ pub fn process_single(
     }
 }
 
+pub const INITIAL_INFECTION_VALUE: u64 = u64::MAX - 1;
+
 pub fn process_droplet(
     p: f64,
     side: usize,
@@ -155,13 +160,15 @@ pub fn process_droplet(
     model: Model,
 ) -> Droplet {
     let start = Instant::now();
-    let mut grid = U64Array::new(side as i32);
+    let mut grid = U64Array::new_filled_with_false(side as i32);
     let mut seed_increment = 0;
     let mut duration;
     let mut final_step;
     println!("Trying to find a droplet...");
     loop {
+        grid.set_next_value(INITIAL_INFECTION_VALUE);
         fill_random(&mut grid, p, (seed_offset + seed_increment) as u64);
+        grid.set_next_value(0);
         seed_increment += 1;
         final_step = film_evolution(model.clone(), &mut grid);
         duration = start.elapsed();

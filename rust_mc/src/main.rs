@@ -157,7 +157,7 @@ mod tests {
 
     #[test]
     fn basic_set_get() {
-        let mut grid = ByteArray::new(4);
+        let mut grid = ByteArray::new_filled_with_false(4);
         assert_eq!(grid.get(0, 0), false);
         assert_eq!(grid.get(-111, -12), false);
         grid.set(0, 0);
@@ -166,7 +166,7 @@ mod tests {
 
     #[test]
     fn basic_modified_update() {
-        let mut grid = ByteArray::new(4);
+        let mut grid = ByteArray::new_filled_with_false(4);
         grid.set(0, 0);
         grid.set(1, 1);
         modified_step(&mut grid);
@@ -176,7 +176,7 @@ mod tests {
 
     #[test]
     fn basic_modified_stable() {
-        let mut grid = ByteArray::new(4);
+        let mut grid = ByteArray::new_filled_with_false(4);
         grid.set(0, 0);
         grid.set(1, 0);
         modified_step(&mut grid);
@@ -186,7 +186,7 @@ mod tests {
 
     #[test]
     fn basic_modified_stable2() {
-        let mut grid = ByteArray::new(4);
+        let mut grid = ByteArray::new_filled_with_false(4);
         grid.set(1, 0);
         grid.set(1, 1);
         modified_step(&mut grid);

@@ -6,7 +6,7 @@ pub struct ByteArray {
 }
 
 impl Memory for ByteArray {
-    fn new(side: Index) -> Self {
+    fn new_filled_with_false(side: Index) -> Self {
         if side <= 0 {
             panic!("Size non-positive")
         }

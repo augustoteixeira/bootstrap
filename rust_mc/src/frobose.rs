@@ -41,7 +41,7 @@ pub fn frobose_step(grid: &mut impl Memory) -> bool {
                     updated = true;
                     grid.set(x, y + 1);
                 }
-                _ => {}
+                _ => {} // if none of the above happended, we don't do anything
             }
         }
     }
@@ -59,4 +59,35 @@ pub fn frobose_run(grid: &mut impl Memory) -> usize {
         }
     }
     return i;
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::bool_vec::ByteArray;
+    use crate::frobose::frobose_step;
+    use crate::memory::Memory;
+
+    #[test]
+    fn insufficient_frobose_update() {
+        let mut grid = ByteArray::new_filled_with_false(4);
+        grid.set(0, 0);
+        grid.set(1, 1);
+        frobose_step(&mut grid);
+        assert_eq!(grid.get(1, 0), false);
+        assert_eq!(grid.get(0, 1), false);
+    }
+
+    #[test]
+    fn sufficient_frobose_update() {
+        for j in 0..4 {
+            let mut grid = ByteArray::new_filled_with_false(4);
+            for i in 0..4 {
+                if i != j {
+                    grid.set(i / 2, i % 2);
+                }
+            }
+            frobose_step(&mut grid);
+            assert_eq!(grid.get(j / 2, j % 2), true);
+        }
+    }
 }
