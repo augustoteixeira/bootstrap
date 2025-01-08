@@ -11,7 +11,7 @@ mod frobose;
 mod modified;
 mod operations;
 mod u64_vec;
-use operations::{process_batch, process_droplet, process_single};
+use operations::{process_bar, process_batch, process_droplet, process_single};
 
 #[derive(clap::ValueEnum, Clone, Debug)]
 enum Model {
@@ -45,7 +45,7 @@ enum Command {
     Single {
         #[arg(short, value_name = "INFECTION_PROBABILITY")]
         p: f64,
-        #[arg(short, value_name = "INFECTION_PROBABILITY")]
+        #[arg(short, value_name = "SIDE_LENGTH")]
         side: Option<u64>,
         #[arg(short, value_name = "SHOULD_WRITE_IMAGE")]
         write: bool,
@@ -53,6 +53,12 @@ enum Command {
     Droplet {
         #[arg(short, value_name = "INFECTION_PROBABILITY")]
         p: f64,
+        #[arg(short, value_name = "SHOULD_WRITE_IMAGE")]
+        write: bool,
+    },
+    ColorBar {
+        #[arg(short, value_name = "HEIGHT")]
+        size: u64,
         #[arg(short, value_name = "SHOULD_WRITE_IMAGE")]
         write: bool,
     },
@@ -94,6 +100,9 @@ struct Droplet {
 fn main() {
     let cli = Cli::parse();
     match cli.cmd {
+        Command::ColorBar { size, write } => {
+            process_bar(size as u64, "bar.png".to_string(), write);
+        }
         Command::Batch {
             max_m,
             min_m,

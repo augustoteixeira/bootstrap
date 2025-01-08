@@ -149,6 +149,19 @@ pub fn process_single(
     }
 }
 
+pub fn process_bar(side: u64, file_path: String, should_write: bool) {
+    let mut grid = U64Array::new_filled_with_false(side as i32);
+    for y in 0..(side as i32) {
+        grid.set_next_value(y as u64);
+        for x in 0..(side as i32) {
+            grid.set(x, y);
+        }
+    }
+    if should_write {
+        write_color_image(&grid, file_path.to_string());
+    }
+}
+
 pub const INITIAL_INFECTION_VALUE: u64 = u64::MAX - 1;
 
 pub fn process_droplet(
